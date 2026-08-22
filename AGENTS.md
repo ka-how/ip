@@ -30,6 +30,28 @@ Ensure that Java 25 is used when running the application or build tasks. On macO
 
 ## Git
 
-Use lightweight tags unless the user requests an annotated tag.
-When proposing or creating a commit message, include enough detail to explain the rationale for the change.
-Do not commit or push unless explicitly asked.
+**Project-specific skill**: Follow the **seedu-git-standard** (defined in `SEEDU_GIT_STANDARD.md`).
+
+All commits must adhere to SE-Edu Git conventions:
+- **Subject**: Imperative mood, capitalized, 50 chars (max 72), no period
+- **Body** (for non-trivial changes): Blank line after subject, wrapped at 72 chars, explain WHAT and WHY
+
+Additional guidelines:
+- Use lightweight tags unless the user requests an annotated tag
+- When proposing or creating a commit message, include enough detail to explain the rationale for the change
+- Do not commit or push unless explicitly asked
+
+For complete standards, see `SEEDU_GIT_STANDARD.md`.
+
+## Java Code
+
+**Project-specific skill**: Follow the **seedu-java-coding-standard** (defined in `SEEDU_JAVA_CODING_STANDARD.md`).
+
+All Java code must adhere to SE-Edu Java conventions including:
+- **Naming**: PascalCase for classes, camelCase for variables/methods, SCREAMING_SNAKE_CASE for constants
+- **Abbreviations**: Use mixed case (e.g., `exportHtmlSource()` not `exportHTMLSource()`)
+- **Booleans**: Use meaningful prefixes like `is`, `has`, `was`, `can` (e.g., `isFound`, `hasLicense()`)
+- **Comments**: Javadoc for all public classes/methods, explain WHY not WHAT
+- **Formatting**: 4-space indentation, max 120 chars per line, standard Java style (braces on same line)
+
+For complete standards, see `SEEDU_JAVA_CODING_STANDARD.md` or https://se-education.org/guides/conventions/java/intermediate.html
