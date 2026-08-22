@@ -4,31 +4,46 @@
  * The list can store up to 100 tasks using a fixed-size array.
  */
 public class List {
-    private static final String[] TEXT_ARRAY = new String[100];
+    private static final Task[] TASK_ARRAY = new Task[100];
     private static int size = 0;
 
     /**
      * Adds a new task to the list and displays a confirmation message.
      *
-     * @param text The task text to add to the list
+     * @param task The task to add to the list
      */
-    public static void addText(String text) {
-        if (size == TEXT_ARRAY.length) {
+    public static void addTask(String task) {
+        if (size == TASK_ARRAY.length) {
             System.out.println("Memory full!");
             return;
         }
-        TEXT_ARRAY[size] = text;
+        TASK_ARRAY[size] = new Task(task);
         size++;
-        System.out.println("Added: " + text);
+        System.out.println("Added: " + task);
+    }
+
+    /**
+     * Retrieves a task from the list by its 1-based index.
+     *
+     * @param id The 1-based task index
+     * @return The task at the given index, or null if the index is out of bounds
+     */
+    public static Task getTask(int id) {
+        if (id < 1 || id > size) {
+            return null;
+        }
+        return TASK_ARRAY[id - 1];
     }
 
     /**
      * Displays all tasks in the list with their index numbers (1-based).
      * If the list is empty, no output is displayed.
      */
-    public static void printText() {
+    public static void printTasks() {
         for (int i = 0; i < size; i++) {
-            System.out.println((i + 1) + ": " + TEXT_ARRAY[i]);
+            System.out.print((i + 1) + ".");
+            TASK_ARRAY[i].printDetails();
+            System.out.println();
         }
     }
 }

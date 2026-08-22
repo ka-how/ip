@@ -1,9 +1,10 @@
 import java.util.Scanner;
 
 /**
- * MoistBot is a task management chatbot that allows users to store and retrieve tasks.
- * Users can add tasks by entering text, view all stored tasks with the "list" command,
- * and exit the application by typing "bye". Tasks are stored in memory and not persisted.
+ * MoistBot provides a minimal, in-memory task manager used for teaching
+ * introductory Java and object-oriented design. It exists to demonstrate
+ * console I/O, simple command parsing, and interaction between small
+ * collaborating classes (e.g., List and Task).
  */
 public class MoistBot {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
@@ -14,9 +15,12 @@ public class MoistBot {
     private static final String DIVIDER = "____________________________________________________________";
 
     /**
-     * The main entry point for the MoistBot application.
-     * Displays a welcome banner and goodbye message, with task interaction handled
-     * by the parseInput() method.
+     * Entry point that prints startup and shutdown messages and delegates
+     * interactive command handling to parseInput(Scanner) so responsibilities
+     * remain separated for easier testing and maintenance.
+     *
+     * The Scanner is created and closed here to avoid leaving System.in closed
+     * unexpectedly by other callers.
      *
      * @param args Command-line arguments (not used)
      */
@@ -27,35 +31,67 @@ public class MoistBot {
         System.out.println("How can I help you today?");
         System.out.println(DIVIDER);
 
-        parseInput();
+        try (Scanner in = new Scanner(System.in)) {
+            parseInput(in);
+        }
 
-        System.out.println(DIVIDER);
-        System.out.println("Bye! Have a nice day.");
-        System.out.println(DIVIDER);
     }
 
     /**
-     * Reads user input in an interactive loop and processes commands.
-     * Handles three types of input:
-     * - "list": Displays all stored tasks
-     * - "bye": Exits the loop
-     * - Any other text: Adds the text as a new task
-     * The loop continues until the user enters "bye".
+     * Runs the main user interaction loop. Reads commands from the provided
+     * Scanner and updates the task list via the List/Task classes. The caller
+     * is responsible for creating and closing the Scanner (see main()).
      */
-    private static void parseInput() {
-        Scanner in = new Scanner(System.in);
-        String inputString = in.nextLine();
+    private static void parseInput(Scanner in) {
+        while (in.hasNextLine()) {
+            String inputString = in.nextLine().trim();
+            if (inputString.isEmpty()) {
+                continue;
+            }
 
-        while (!inputString.equals("bye")) {
+            String[] inputArray = inputString.split(" ", 2);
+
             System.out.println(DIVIDER);
-            if (inputString.equals("list")) {
-                List.printText();
+
+            String command = inputArray[0];
+
+            if (command.equals("bye")) {
+                System.out.println("Bye! Have a nice day.");
+                System.out.println(DIVIDER);
+                break;
+            } else if (command.equals("list")) {
+                System.out.println("Here are the tasks in your list:");
+                List.printTasks();
+            } else if (command.equals("mark") || command.equals("unmark")) {
+                try {
+                    if (inputArray.length < 2) {
+                        System.out.println("Error: Please provide a task number to " + command + ".");
+                    } else {
+                        int taskIndex = Integer.parseInt(inputArray[1]);
+                        Task task = List.getTask(taskIndex);
+                        if (task != null) {
+                            boolean isMarking = command.equals("mark");
+                            task.setCompleted(isMarking);
+                            if (isMarking) {
+                                System.out.println("Great! I've marked this task as completed:");
+                            } else {
+                                System.out.println("Task has been marked incomplete:");
+                            }
+                            System.out.print("  ");
+                            task.printDetails();
+                            System.out.println();
+                        } else {
+                            System.out.println("Error: Task number " + taskIndex + " not found.");
+                        }
+                    }
+                } catch (NumberFormatException e) {
+                    System.out.println("Error: Invalid task number.");
+                }
+            } else {
+                List.addTask(inputString);
             }
-            else {
-                List.addText(inputString);
-            }
+
             System.out.println(DIVIDER);
-            inputString = in.nextLine();
         }
     }
 }
