@@ -3,7 +3,7 @@
  * Provides functionality to add tasks and display all stored tasks.
  * The list can store up to 100 tasks using a fixed-size array.
  */
-public class List {
+public class TaskManager {
     private static final Task[] TASK_ARRAY = new Task[100];
     private static int size = 0;
 

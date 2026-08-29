@@ -4,7 +4,7 @@ import java.util.Scanner;
  * MoistBot provides a minimal, in-memory task manager used for teaching
  * introductory Java and object-oriented design. It exists to demonstrate
  * console I/O, simple command parsing, and interaction between small
- * collaborating classes (e.g., List and Task).
+ * collaborating classes (e.g., TaskManager and Task).
  */
 public class MoistBot {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
@@ -39,7 +39,7 @@ public class MoistBot {
 
     /**
      * Runs the main user interaction loop. Reads commands from the provided
-     * Scanner and updates the task list via the List/Task classes. The caller
+     * Scanner and updates the task list via the TaskManager/Task classes. The caller
      * is responsible for creating and closing the Scanner (see main()).
      */
     private static void parseInput(Scanner in) {
@@ -61,14 +61,14 @@ public class MoistBot {
                 break;
             } else if (command.equals("list")) {
                 System.out.println("Here are the tasks in your list:");
-                List.printTasks();
+                TaskManager.printTasks();
             } else if (command.equals("mark") || command.equals("unmark")) {
                 try {
                     if (inputArray.length < 2) {
                         System.out.println("Error: Please provide a task number to " + command + ".");
                     } else {
                         int taskIndex = Integer.parseInt(inputArray[1]);
-                        Task task = List.getTask(taskIndex);
+                        Task task = TaskManager.getTask(taskIndex);
                         if (task != null) {
                             boolean isMarking = command.equals("mark");
                             task.setCompleted(isMarking);
@@ -88,7 +88,7 @@ public class MoistBot {
                     System.out.println("Error: Invalid task number.");
                 }
             } else {
-                List.addTask(inputString);
+                TaskManager.addTask(inputString);
             }
 
             System.out.println(DIVIDER);
