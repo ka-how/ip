@@ -26,12 +26,12 @@ public class Task {
         this.isCompleted = isCompleted;
     }
 
-    /**
-     * Prints this task's details in the format "[X] taskname" (if completed)
-     * or "[ ] taskname" (if not completed). Does not print a newline.
-     */
-    public void printDetails() {
-        char cross = isCompleted ? 'X' : ' ';
-        System.out.print("[" + cross + "] " + name);
+    public String getName() {
+        return name;
     }
+
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
 }
