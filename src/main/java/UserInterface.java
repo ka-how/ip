@@ -1,7 +1,7 @@
 /**
  * Handles all user interface output and formatting for the task manager application.
- * Provides methods to display welcome messages, task lists, and confirmations using
- * formatted output with visual dividers.
+ * Provides methods to display welcome messages, task lists, and confirmations
+ * with formatted output using visual dividers for better readability.
  */
 public class UserInterface {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
@@ -32,31 +32,51 @@ public class UserInterface {
 
     /**
      * Displays a confirmation message when a task is successfully added to the list.
+     * Shows the added task and the updated task count.
      *
-     * @param taskName The name of the task that was added
+     * @param task The task that was added
+     * @param size The updated total number of tasks in the list
      */
-    public static void printAddTask(String taskName) {
-        printMessage("Added: " + taskName);
+    public static void printAddTask(Task task, int size) {
+        String header = "Task added!";
+        printMessage(header + "\n" + formatModifyTask(task, size));
     }
 
     /**
      * Displays a confirmation message when a task is marked as complete.
+     * Shows the marked task and the updated task count.
      *
      * @param task The task that was marked as complete
+     * @param size The total number of tasks in the list
      */
-    public static void printMarkTask(Task task) {
+    public static void printMarkTask(Task task, int size) {
         String header = "Task marked as complete!";
-        printMessage(header + "\n" + formatTaskDetails(task));
+        printMessage(header + "\n" + formatModifyTask(task, size));
     }
 
     /**
      * Displays a confirmation message when a task is marked as incomplete.
+     * Shows the unmarked task and the updated task count.
      *
      * @param task The task that was marked as incomplete
+     * @param size The total number of tasks in the list
      */
-    public static void printUnmarkTask(Task task) {
+    public static void printUnmarkTask(Task task, int size) {
         String header = "Task marked as incomplete";
-        printMessage(header + "\n" + formatTaskDetails(task));
+        printMessage(header + "\n" + formatModifyTask(task, size));
+    }
+
+    /**
+     * Formats the output for task modification operations.
+     * Combines the formatted task details with the updated task count.
+     *
+     * @param task The task that was modified
+     * @param size The updated total number of tasks in the list
+     * @return A formatted string with task details and task count
+     */
+    public static String formatModifyTask(Task task, int size) {
+        String ending = "Now you have " + size + " tasks in the list";
+        return formatTaskDetails(task) + "\n" + ending;
     }
 
     /**
@@ -72,7 +92,7 @@ public class UserInterface {
 
     /**
      * Displays all tasks in the list with 1-based indexing.
-     * Each task is displayed with its completion status and name.
+     * Each task is displayed with its completion status and details.
      *
      * @param tasks The array containing tasks to display
      * @param size The number of tasks currently in the list
@@ -91,14 +111,15 @@ public class UserInterface {
 
     /**
      * Formats task details for display.
-     * Shows the task completion status as [X] for complete or [ ] for incomplete,
-     * followed by the task name.
+     * Shows the task type in [T/D/E], completion status as [X] for complete or [ ] for incomplete,
+     * followed by the task description (which may include additional time information for deadlines and events).
      *
      * @param task The task to format
      * @return A formatted string representation of the task
      */
     public static String formatTaskDetails(Task task) {
         char cross = task.isCompleted() ? 'X' : ' ';
-        return "[" + cross + "] " + task.getName();
+        char taskType = task.getTaskType();
+        return "[" + taskType + "][" + cross + "] " + task;
     }
 }

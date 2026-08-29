@@ -1,21 +1,21 @@
 import java.util.Scanner;
 
 /**
- * Runs a simple console-based task tracker used to teach Java fundamentals.
- * The application accepts commands such as adding, listing, marking, and
- * unmarking tasks, with parsing and command handling separated into helper
- * classes for clarity and maintainability.
+ * MoistBot is a simple console-based task tracker application that teaches Java fundamentals.
+ * The application accepts commands such as adding, listing, marking, and unmarking tasks.
+ * Parsing and command handling are separated into helper classes (Parser, Command, TaskManager)
+ * for clarity, maintainability, and easier testing.
  */
 public class MoistBot {
     /**
-     * Entry point that prints startup and shutdown messages and delegates
-     * interactive command handling to parseInput(Scanner) so responsibilities
-     * remain separated for easier testing and maintenance.
+     * Entry point of the MoistBot application.
+     * Prints startup and shutdown messages and delegates interactive command handling to the
+     * execute(Command) method so responsibilities remain separated for easier testing and maintenance.
      *
      * The Scanner is created and closed here to avoid leaving System.in closed
-     * unexpectedly by other callers.
+     * unexpectedly by other parts of the program.
      *
-     * @param args Command-line arguments (not used)
+     * @param args Command-line arguments (not used by this application)
      */
     public static void main(String[] args) {
         UserInterface.printWelcome();
@@ -35,41 +35,61 @@ public class MoistBot {
 
     /**
      * Executes a parsed command and prints the corresponding user feedback.
+     * Handles all command types: BYE, LIST, MARK, UNMARK, TODO, DEADLINE, and EVENT.
+     * Task operations delegate to TaskManager for manipulation and to UserInterface for display.
      *
      * @param command The parsed command object to execute
      * @return True if the application should exit, false otherwise
      */
     private static boolean execute(Command command) {
-        String commandType = command.getCommandType();
-        String argument = command.getArgument();
+        Command.CommandType commandType = command.getCommandType();
+        String description = command.getDescription();
+        String from = command.getFrom();
+        String to = command.getTo();
 
+        Task task;
         switch (commandType) {
-            case "bye":
+            case BYE:
                 UserInterface.printExit();
                 return true;
-            case "list":
+            case LIST:
                 UserInterface.printTasks(TaskManager.getTaskArray(), TaskManager.getSize());
                 return false;
-            case "add":
-                TaskManager.addTask(argument);
-                UserInterface.printAddTask(argument);
+            case TODO:
+                TaskManager.addTask(description);
+                task = TaskManager.getTask(TaskManager.getSize());
+                UserInterface.printAddTask(task, TaskManager.getSize());
                 return false;
-        }
-
-        int taskIndex = Integer.parseInt(argument);
-        Task task = TaskManager.getTask(taskIndex);
-        if (task == null) {
-            throw new IllegalArgumentException("Task not found");
-        }
-        switch (commandType) {
-            case "mark":
+            case DEADLINE:
+                TaskManager.addDeadline(description, to);
+                task = TaskManager.getTask(TaskManager.getSize());
+                UserInterface.printAddTask(task, TaskManager.getSize());
+                return false;
+            case EVENT:
+                TaskManager.addEvent(description, from, to);
+                task = TaskManager.getTask(TaskManager.getSize());
+                UserInterface.printAddTask(task, TaskManager.getSize());
+                return false;
+            case MARK:
+                int markIndex = Integer.parseInt(description);
+                task = TaskManager.getTask(markIndex);
+                if (task == null) {
+                    throw new IllegalArgumentException("Task not found");
+                }
                 task.setCompleted(true);
-                UserInterface.printMarkTask(task);
+                UserInterface.printMarkTask(task, TaskManager.getSize());
                 return false;
-            case "unmark":
+            case UNMARK:
+                int unmarkIndex = Integer.parseInt(description);
+                task = TaskManager.getTask(unmarkIndex);
+                if (task == null) {
+                    throw new IllegalArgumentException("Task not found");
+                }
                 task.setCompleted(false);
-                UserInterface.printUnmarkTask(task);
+                UserInterface.printUnmarkTask(task, TaskManager.getSize());
                 return false;
+            default:
+                break;
         }
 
         return true;

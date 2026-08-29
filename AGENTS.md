@@ -55,3 +55,14 @@ All Java code must adhere to SE-Edu Java conventions including:
 - **Formatting**: 4-space indentation, max 120 chars per line, standard Java style (braces on same line)
 
 For complete standards, see `SEEDU_JAVA_CODING_STANDARD.md` or https://se-education.org/guides/conventions/java/intermediate.html
+
+## Post-update verification
+
+After every code update, do the following before finalising the work:
+
+1. Review whether `test/ui-test-plan.md` needs to be updated to match the new or changed behaviour.
+   - If the UI, command flow, or output format changes, add or modify the relevant test entries with the aim, inputs, and expected output.
+2. Invoke the `test-ui` skill to run the relevant UI regression checks.
+   - The skill should run the program, capture the console input and output, compare actual vs expected output, and stop immediately on the first failed case.
+   - If a case fails, report the actual and expected outputs and terminate the test session.
+3. If no plan change is needed, still run the `test-ui` skill with the most relevant cases to confirm the app still behaves as expected.
