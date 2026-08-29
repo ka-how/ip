@@ -1,10 +1,10 @@
 import java.util.Scanner;
 
 /**
- * MoistBot provides a minimal, in-memory task manager used for teaching
- * introductory Java and object-oriented design. It exists to demonstrate
- * console I/O, simple command parsing, and interaction between small
- * collaborating classes (e.g., TaskManager and Task).
+ * Runs a simple console-based task tracker used to teach Java fundamentals.
+ * The application accepts commands such as adding, listing, marking, and
+ * unmarking tasks, with parsing and command handling separated into helper
+ * classes for clarity and maintainability.
  */
 public class MoistBot {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
@@ -31,67 +31,72 @@ public class MoistBot {
         System.out.println("How can I help you today?");
         System.out.println(DIVIDER);
 
+        boolean exit = false;
         try (Scanner in = new Scanner(System.in)) {
-            parseInput(in);
+            while (!exit && in.hasNextLine()) {
+                Command command = Parser.parseInput(in.nextLine());
+                System.out.println(DIVIDER);
+                exit = execute(command);
+                System.out.println(DIVIDER);
+            }
         }
-
     }
 
     /**
-     * Runs the main user interaction loop. Reads commands from the provided
-     * Scanner and updates the task list via the TaskManager/Task classes. The caller
-     * is responsible for creating and closing the Scanner (see main()).
+     * Executes a parsed command and prints the corresponding user feedback.
+     *
+     * @param command The parsed command object to execute
+     * @return True if the application should exit, false otherwise
      */
-    private static void parseInput(Scanner in) {
-        while (in.hasNextLine()) {
-            String inputString = in.nextLine().trim();
-            if (inputString.isEmpty()) {
-                continue;
+    private static boolean execute(Command command) {
+        String commandType = command.getCommandType();
+        String argument = command.getArgument();
+
+        // Handle errors first
+        if (commandType.equals("error")) {
+            switch (argument) {
+                case "noInput":
+                    System.out.println("Please provide an input.");
+                    return false;
+                case "missingArgument":
+                    System.out.println("Missing argument.");
+                    return false;
+                case "numberFormatException":
+                    System.out.println("Please provide an integer argument.");
+                    return false;
             }
+        }
 
-            String[] inputArray = inputString.split(" ", 2);
-
-            System.out.println(DIVIDER);
-
-            String command = inputArray[0];
-
-            if (command.equals("bye")) {
+        switch (commandType) {
+            case "bye":
                 System.out.println("Bye! Have a nice day.");
-                System.out.println(DIVIDER);
-                break;
-            } else if (command.equals("list")) {
+                return true;
+            case "list":
                 System.out.println("Here are the tasks in your list:");
                 TaskManager.printTasks();
-            } else if (command.equals("mark") || command.equals("unmark")) {
-                try {
-                    if (inputArray.length < 2) {
-                        System.out.println("Error: Please provide a task number to " + command + ".");
-                    } else {
-                        int taskIndex = Integer.parseInt(inputArray[1]);
-                        Task task = TaskManager.getTask(taskIndex);
-                        if (task != null) {
-                            boolean isMarking = command.equals("mark");
-                            task.setCompleted(isMarking);
-                            if (isMarking) {
-                                System.out.println("Great! I've marked this task as completed:");
-                            } else {
-                                System.out.println("Task has been marked incomplete:");
-                            }
-                            System.out.print("  ");
-                            task.printDetails();
-                            System.out.println();
-                        } else {
-                            System.out.println("Error: Task number " + taskIndex + " not found.");
-                        }
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Error: Invalid task number.");
-                }
-            } else {
-                TaskManager.addTask(inputString);
-            }
-
-            System.out.println(DIVIDER);
+                return false;
+            case "add":
+                TaskManager.addTask(argument);
+                return false;
         }
+
+        int taskIndex = Integer.parseInt(argument);
+        Task task = TaskManager.getTask(taskIndex);
+        if (task == null) {
+            System.out.println("Task not found.");
+            return false;
+        }
+        switch (commandType) {
+            case "mark":
+                System.out.println("Marking task " + taskIndex + ".");
+                task.setCompleted(true);
+                return false;
+            case "unmark":
+                System.out.println("Unmarking task " + taskIndex + ".");
+                task.setCompleted(false);
+                return false;
+        }
+
+        return true;
     }
 }
