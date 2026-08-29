@@ -44,26 +44,22 @@ public class UserInterface {
 
     /**
      * Displays a confirmation message when a task is marked as complete.
-     * Shows the marked task and the updated task count.
      *
      * @param task The task that was marked as complete
-     * @param size The total number of tasks in the list
      */
-    public static void printMarkTask(Task task, int size) {
+    public static void printMarkTask(Task task) {
         String header = "Task marked as complete!";
-        printMessage(header + "\n" + formatModifyTask(task, size));
+        printMessage(header + "\n" + formatTaskDetails(task));
     }
 
     /**
      * Displays a confirmation message when a task is marked as incomplete.
-     * Shows the unmarked task and the updated task count.
      *
      * @param task The task that was marked as incomplete
-     * @param size The total number of tasks in the list
      */
-    public static void printUnmarkTask(Task task, int size) {
+    public static void printUnmarkTask(Task task) {
         String header = "Task marked as incomplete";
-        printMessage(header + "\n" + formatModifyTask(task, size));
+        printMessage(header + "\n" + formatTaskDetails(task));
     }
 
     /**

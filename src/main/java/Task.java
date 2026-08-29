@@ -8,9 +8,9 @@ public class Task {
     public static final char TYPE_DEADLINE = 'D';
     public static final char TYPE_EVENT = 'E';
 
-    private String description;
+    private final String description;
     private boolean isCompleted;
-    private char taskType;
+    private final char taskType;
 
     /**
      * Constructs a Task with the given description and task type.

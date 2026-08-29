@@ -4,6 +4,14 @@
  * required arguments before constructing the corresponding command object.
  */
 public class Parser {
+    private static final String DEADLINE_USAGE = "deadline <desc> /by <time>";
+    private static final String EVENT_USAGE = "event <desc> /from <time> /to <time>";
+    private static final String DEADLINE_SEPARATOR = " /by ";
+    private static final String EVENT_FROM_SEPARATOR = " /from ";
+    private static final String EVENT_TO_SEPARATOR = " /to ";
+    private static final String INPUT_ERROR = "Please provide an input";
+    private static final String DESC_MISSING = "Description missing. Usage: ";
+    private static final String ARG_MISSING = "Missing argument";
     /**
      * Parses a user-entered line into a command object.
      * Recognizes command keywords (bye, list, mark, unmark, todo, deadline, event)
@@ -15,64 +23,124 @@ public class Parser {
      * @throws IllegalArgumentException if the input is blank, missing required arguments, or malformed
      */
     public static Command parseInput(String inputString) {
+        String trimmedInput = validateInput(inputString);
+        String[] inputArray = trimmedInput.split("\\s+", 2);
+        String commandText = inputArray[0];
+
+        return parseCommand(commandText, inputArray);
+    }
+
+    /**
+     * Validates that the input string is not null or empty.
+     *
+     * @param inputString The raw text to validate
+     * @return The trimmed input string
+     * @throws IllegalArgumentException if the input is null or blank
+     */
+    private static String validateInput(String inputString) {
         if (inputString == null) {
-            throw new IllegalArgumentException("Please provide an input");
+            throw new IllegalArgumentException(INPUT_ERROR);
         }
 
         String trimmedInput = inputString.trim();
         if (trimmedInput.isEmpty()) {
-            throw new IllegalArgumentException("Please provide an input");
+            throw new IllegalArgumentException(INPUT_ERROR);
         }
 
-        String[] inputArray = trimmedInput.split("\\s+", 2);
-        String commandText = inputArray[0];
-        Command.CommandType commandType;
+        return trimmedInput;
+    }
+
+    /**
+     * Parses a command based on its keyword and arguments.
+     *
+     * @param commandText The command keyword
+     * @param inputArray The array containing the command and its arguments
+     * @return A parsed command object
+     * @throws IllegalArgumentException if the command arguments are invalid
+     */
+    private static Command parseCommand(String commandText, String[] inputArray) {
         switch (commandText) {
             case "bye":
-                commandType = Command.CommandType.BYE;
-                return new Command(commandType, null);
+                return new Command(Command.CommandType.BYE, null);
             case "list":
-                commandType = Command.CommandType.LIST;
-                return new Command(commandType, null);
+                return new Command(Command.CommandType.LIST, null);
             case "mark":
-                if (inputArray.length < 2) {
-                    throw new IllegalArgumentException("Missing argument");
-                }
-                try {
-                    Integer.parseInt(inputArray[1]);
-                    return new Command(Command.CommandType.MARK, inputArray[1]);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Please provide an integer argument", e);
-                }
+                return parseMarkOrUnmark(Command.CommandType.MARK, inputArray);
             case "unmark":
-                if (inputArray.length < 2) {
-                    throw new IllegalArgumentException("Missing argument");
-                }
-                try {
-                    Integer.parseInt(inputArray[1]);
-                    return new Command(Command.CommandType.UNMARK, inputArray[1]);
-                } catch (NumberFormatException e) {
-                    throw new IllegalArgumentException("Please provide an integer argument", e);
-                }
+                return parseMarkOrUnmark(Command.CommandType.UNMARK, inputArray);
             case "todo":
-                if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-                    throw new IllegalArgumentException("Description missing. Usage: todo <description>");
-                }
-                return new Command(Command.CommandType.TODO, inputArray[1].trim());
+                return parseTodo(inputArray);
             case "deadline":
-                if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-                    throw new IllegalArgumentException("Description missing. Usage: deadline <desc> /by <time>");
-                }
-                return parseDeadline(inputArray[1]);
+                return parseDeadlineCommand(inputArray);
             case "event":
-                if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-                    throw new IllegalArgumentException("Description missing. Usage: event <desc> /from <time> /to <time>");
-                }
-                return parseEvent(inputArray[1]);
+                return parseEventCommand(inputArray);
             default:
-                return new Command(Command.CommandType.TODO, trimmedInput);
+                return new Command(Command.CommandType.TODO, String.join(" ", inputArray));
         }
     }
+
+    /**
+     * Parses mark or unmark commands that require an integer argument.
+     *
+     * @param commandType The command type (MARK or UNMARK)
+     * @param inputArray The array containing the command and its arguments
+     * @return A parsed MARK or UNMARK command
+     * @throws IllegalArgumentException if the argument is missing or not an integer
+     */
+    private static Command parseMarkOrUnmark(Command.CommandType commandType, String[] inputArray) {
+        if (inputArray.length < 2) {
+            throw new IllegalArgumentException(ARG_MISSING);
+        }
+        try {
+            Integer.parseInt(inputArray[1]);
+            return new Command(commandType, inputArray[1]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Please provide an integer argument", e);
+        }
+    }
+
+    /**
+     * Parses a todo command.
+     *
+     * @param inputArray The array containing the command and its arguments
+     * @return A parsed TODO command
+     * @throws IllegalArgumentException if the description is missing
+     */
+    private static Command parseTodo(String[] inputArray) {
+        if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
+            throw new IllegalArgumentException(DESC_MISSING + "todo <description>");
+        }
+        return new Command(Command.CommandType.TODO, inputArray[1].trim());
+    }
+
+    /**
+     * Parses a deadline command.
+     *
+     * @param inputArray The array containing the command and its arguments
+     * @return A parsed DEADLINE command
+     * @throws IllegalArgumentException if the description is missing
+     */
+    private static Command parseDeadlineCommand(String[] inputArray) {
+        if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
+            throw new IllegalArgumentException(DESC_MISSING + DEADLINE_USAGE);
+        }
+        return parseDeadline(inputArray[1]);
+    }
+
+    /**
+     * Parses an event command.
+     *
+     * @param inputArray The array containing the command and its arguments
+     * @return A parsed EVENT command
+     * @throws IllegalArgumentException if the description is missing
+     */
+    private static Command parseEventCommand(String[] inputArray) {
+        if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
+            throw new IllegalArgumentException(DESC_MISSING + EVENT_USAGE);
+        }
+        return parseEvent(inputArray[1]);
+    }
+
 
     /**
      * Parses a deadline command string in the format "description /by deadline".
@@ -82,19 +150,19 @@ public class Parser {
      * @throws IllegalArgumentException if the format is invalid or required fields are missing
      */
     public static Command parseDeadline(String inputString) {
-        if (!inputString.contains(" /by ")) {
-            throw new IllegalArgumentException("Invalid command. Usage: deadline <desc> /by <time>");
+        if (!inputString.contains(DEADLINE_SEPARATOR)) {
+            throw new IllegalArgumentException("Invalid command. Usage: " + DEADLINE_USAGE);
         }
 
-        String[] inputArray = inputString.split(" /by ", 2);
+        String[] inputArray = inputString.split(DEADLINE_SEPARATOR, 2);
         String description = inputArray[0].trim();
         String by = inputArray[1].trim();
 
         if (description.isEmpty()) {
-            throw new IllegalArgumentException("Description missing. Usage: deadline <desc> /by <time>");
+            throw new IllegalArgumentException(DESC_MISSING + DEADLINE_USAGE);
         }
         if (by.isEmpty()) {
-            throw new IllegalArgumentException("Deadline missing. Usage: deadline <desc> /by <time>");
+            throw new IllegalArgumentException("Deadline missing. Usage: " + DEADLINE_USAGE);
         }
 
         return new Command(Command.CommandType.DEADLINE, description, null, by);
@@ -108,23 +176,23 @@ public class Parser {
      * @throws IllegalArgumentException if the format is invalid or required fields are missing
      */
     public static Command parseEvent(String inputString) {
-        if (!(inputString.contains(" /from ") && inputString.contains(" /to "))) {
-            throw new IllegalArgumentException("Invalid command. Usage: event <desc> /from <time> /to <time>");
+        if (!(inputString.contains(EVENT_FROM_SEPARATOR) && inputString.contains(EVENT_TO_SEPARATOR))) {
+            throw new IllegalArgumentException("Invalid command. Usage: " + EVENT_USAGE);
         }
 
-        String[] inputArray = inputString.split(" /from | /to ", 3);
+        String[] inputArray = inputString.split(EVENT_FROM_SEPARATOR + "|" + EVENT_TO_SEPARATOR, 3);
         String description = inputArray[0].trim();
         String from = inputArray[1].trim();
         String to = inputArray[2].trim();
 
         if (description.isEmpty()) {
-            throw new IllegalArgumentException("Description missing. Usage: event <desc> /from <time> /to <time>");
+            throw new IllegalArgumentException(DESC_MISSING + EVENT_USAGE);
         }
         if (from.isEmpty()) {
-            throw new IllegalArgumentException("Time missing. Usage: event <desc> /from <time> /to <time>");
+            throw new IllegalArgumentException("Time missing. Usage: " + EVENT_USAGE);
         }
         if (to.isEmpty()) {
-            throw new IllegalArgumentException("Time missing. usage: event <desc> /from <time> /to <time>");
+            throw new IllegalArgumentException("Time missing. Usage: " + EVENT_USAGE);
         }
 
         return new Command(Command.CommandType.EVENT, description, from, to);

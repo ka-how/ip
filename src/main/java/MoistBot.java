@@ -9,11 +9,11 @@ import java.util.Scanner;
 public class MoistBot {
     /**
      * Entry point of the MoistBot application.
-     * Prints startup and shutdown messages and delegates interactive command handling to the
-     * execute(Command) method so responsibilities remain separated for easier testing and maintenance.
+     * Prints the startup message and delegates interactive command handling to the
+     * execute(Command) method. The bye command prints the shutdown message before exiting.
      *
-     * The Scanner is created and closed here to avoid leaving System.in closed
-     * unexpectedly by other parts of the program.
+     * The Scanner is scoped to the application lifetime; closing it also closes System.in
+     * when the application terminates.
      *
      * @param args Command-line arguments (not used by this application)
      */
@@ -43,55 +43,124 @@ public class MoistBot {
      */
     private static boolean execute(Command command) {
         Command.CommandType commandType = command.getCommandType();
-        String description = command.getDescription();
-        String from = command.getFrom();
-        String to = command.getTo();
 
-        Task task;
         switch (commandType) {
             case BYE:
-                UserInterface.printExit();
-                return true;
+                return executeBye();
             case LIST:
-                UserInterface.printTasks(TaskManager.getTaskArray(), TaskManager.getSize());
-                return false;
+                return executeList();
             case TODO:
-                TaskManager.addTask(description);
-                task = TaskManager.getTask(TaskManager.getSize());
-                UserInterface.printAddTask(task, TaskManager.getSize());
-                return false;
+                return executeTodo(command.getDescription());
             case DEADLINE:
-                TaskManager.addDeadline(description, to);
-                task = TaskManager.getTask(TaskManager.getSize());
-                UserInterface.printAddTask(task, TaskManager.getSize());
-                return false;
+                return executeDeadline(command.getDescription(), command.getTo());
             case EVENT:
-                TaskManager.addEvent(description, from, to);
-                task = TaskManager.getTask(TaskManager.getSize());
-                UserInterface.printAddTask(task, TaskManager.getSize());
-                return false;
+                return executeEvent(command.getDescription(), command.getFrom(), command.getTo());
             case MARK:
-                int markIndex = Integer.parseInt(description);
-                task = TaskManager.getTask(markIndex);
-                if (task == null) {
-                    throw new IllegalArgumentException("Task not found");
-                }
-                task.setCompleted(true);
-                UserInterface.printMarkTask(task, TaskManager.getSize());
-                return false;
+                return executeMark(command.getDescription());
             case UNMARK:
-                int unmarkIndex = Integer.parseInt(description);
-                task = TaskManager.getTask(unmarkIndex);
-                if (task == null) {
-                    throw new IllegalArgumentException("Task not found");
-                }
-                task.setCompleted(false);
-                UserInterface.printUnmarkTask(task, TaskManager.getSize());
-                return false;
+                return executeUnmark(command.getDescription());
             default:
-                break;
+                throw new IllegalArgumentException("Unsupported command");
         }
+    }
 
+    /**
+     * Executes the bye command to exit the application.
+     *
+     * @return Always returns true to signal application exit
+     */
+    private static boolean executeBye() {
+        UserInterface.printExit();
         return true;
+    }
+
+    /**
+     * Executes the list command to display all tasks.
+     *
+     * @return Always returns false to continue execution
+     */
+    private static boolean executeList() {
+        UserInterface.printTasks(TaskManager.getTaskArray(), TaskManager.getSize());
+        return false;
+    }
+
+    /**
+     * Executes the todo command to add a new todo task.
+     *
+     * @param description The description of the todo task
+     * @return Always returns false to continue execution
+     */
+    private static boolean executeTodo(String description) {
+        return executeAddTask(TaskManager.addTodo(description));
+    }
+
+    /**
+     * Executes the deadline command to add a new deadline task.
+     *
+     * @param description The description of the deadline task
+     * @param by The deadline for the task
+     * @return Always returns false to continue execution
+     */
+    private static boolean executeDeadline(String description, String by) {
+        return executeAddTask(TaskManager.addDeadline(description, by));
+    }
+
+    /**
+     * Executes the event command to add a new event task.
+     *
+     * @param description The description of the event
+     * @param from The start time of the event
+     * @param to The end time of the event
+     * @return Always returns false to continue execution
+     */
+    private static boolean executeEvent(String description, String from, String to) {
+        return executeAddTask(TaskManager.addEvent(description, from, to));
+    }
+
+    /**
+     * Displays feedback after a task is added.
+     *
+     * @param task The added task
+     * @return Always returns false to continue execution
+     */
+    private static boolean executeAddTask(Task task) {
+        UserInterface.printAddTask(task, TaskManager.getSize());
+        return false;
+    }
+
+    /**
+     * Executes the mark command to mark a task as completed.
+     *
+     * @param description The 1-based index of the task to mark
+     * @return Always returns false to continue execution
+     * @throws IllegalArgumentException if the task index is invalid
+     */
+    private static boolean executeMark(String description) {
+        int markIndex = Integer.parseInt(description);
+        Task task = TaskManager.getTask(markIndex);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found");
+        }
+        task.setCompleted(true);
+        UserInterface.printMarkTask(task);
+        return false;
+    }
+
+    /**
+     * Executes the unmark command to mark a task as incomplete.
+     *
+     * @param description The 1-based index of the task to unmark
+     * @return Always returns false to continue execution
+     * @throws IllegalArgumentException if the task index is invalid
+     */
+    private static boolean executeUnmark(String description) {
+        int unmarkIndex = Integer.parseInt(description);
+        Task task = TaskManager.getTask(unmarkIndex);
+        if (task == null) {
+            throw new IllegalArgumentException("Task not found");
+        }
+        task.setCompleted(false);
+        UserInterface.printUnmarkTask(task);
+        return false;
     }
 }

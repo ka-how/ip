@@ -3,8 +3,8 @@
  * Extends Task to add start and end time fields, displayed when the task is converted to a string.
  */
 public class Event extends Task {
-    private String from;
-    private String to;
+    private final String from;
+    private final String to;
 
     /**
      * Constructs an Event task with the given description, start time, and end time.

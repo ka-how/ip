@@ -3,7 +3,7 @@
  * Extends Task to add a deadline field, displayed when the task is converted to a string.
  */
 public class Deadline extends Task {
-    private String deadline;
+    private final String deadline;
 
     /**
      * Constructs a Deadline task with the given description and deadline.

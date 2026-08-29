@@ -136,7 +136,6 @@ ____________________________________________________________
 ____________________________________________________________
 Task marked as complete!
 [D][X] return book (by: Friday)
-Now you have 3 tasks in the list
 ____________________________________________________________
 ____________________________________________________________
 Here are the tasks in your list:
@@ -147,10 +146,31 @@ ____________________________________________________________
 ____________________________________________________________
 Task marked as incomplete
 [D][ ] return book (by: Friday)
-Now you have 3 tasks in the list
 ____________________________________________________________
 ____________________________________________________________
 Bye! Have a nice day!
+____________________________________________________________
+```
+
+## Test case 5: unrecognised input defaults to a todo
+
+Aim: Verify that an unrecognised multi-word input is retained in full when it is treated as a todo.
+
+Inputs:
+- `buy groceries today`
+- `list`
+- `bye`
+
+Expected output:
+```text
+____________________________________________________________
+Task added!
+[T][ ] buy groceries today
+Now you have 1 tasks in the list
+____________________________________________________________
+____________________________________________________________
+Here are the tasks in your list:
+1.[T][ ] buy groceries today
 ____________________________________________________________
 ```
 

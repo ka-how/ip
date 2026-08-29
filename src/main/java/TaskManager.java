@@ -5,66 +5,60 @@
  * The list can store up to 100 tasks using a fixed-size array.
  */
 public class TaskManager {
-    private static final Task[] TASK_ARRAY = new Task[100];
+    private static final int MAX_TASKS = 100;
+    private static final Task[] TASK_ARRAY = new Task[MAX_TASKS];
     private static int size = 0;
 
     /**
      * Adds a new todo task to the task list.
-     * Wrapper method that delegates to addTodo(String).
-     *
-     * @param description The description of the todo task to add
-     * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
-     */
-    public static void addTask(String description) {
-        addTodo(description);
-    }
-
-    /**
-     * Adds a new todo task to the task list.
-     * Increments the size counter if there is space available.
      *
      * @param description The description of the todo task
+     * @return The task that was added
      * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
      */
-    public static void addTodo(String description) {
-        if (size == TASK_ARRAY.length) {
-            throw new IllegalArgumentException("Memory full!");
-        }
-        TASK_ARRAY[size] = new Todo(description);
-        size++;
+    public static Task addTodo(String description) {
+        return addTask(new Todo(description));
     }
 
     /**
      * Adds a new deadline task to the task list.
-     * Increments the size counter if there is space available.
      *
      * @param description The description of the deadline task
      * @param by The deadline for the task
+     * @return The task that was added
      * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
      */
-    public static void addDeadline(String description, String by) {
-        if (size == TASK_ARRAY.length) {
-            throw new IllegalArgumentException("Memory full!");
-        }
-        TASK_ARRAY[size] = new Deadline(description, by);
-        size++;
+    public static Task addDeadline(String description, String by) {
+        return addTask(new Deadline(description, by));
     }
 
     /**
      * Adds a new event task to the task list.
-     * Increments the size counter if there is space available.
      *
      * @param description The description of the event
      * @param from The start time of the event
      * @param to The end time of the event
+     * @return The task that was added
      * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
      */
-    public static void addEvent(String description, String from, String to) {
-        if (size == TASK_ARRAY.length) {
+    public static Task addEvent(String description, String from, String to) {
+        return addTask(new Event(description, from, to));
+    }
+
+    /**
+     * Stores a task after ensuring that the fixed-size task list has capacity.
+     *
+     * @param task The task to store
+     * @return The task that was stored
+     * @throws IllegalArgumentException if the task list is at maximum capacity
+     */
+    private static Task addTask(Task task) {
+        if (size == MAX_TASKS) {
             throw new IllegalArgumentException("Memory full!");
         }
-        TASK_ARRAY[size] = new Event(description, from, to);
+        TASK_ARRAY[size] = task;
         size++;
+        return task;
     }
 
     /**

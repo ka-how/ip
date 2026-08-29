@@ -24,10 +24,10 @@ public class Command {
         EVENT
     }
 
-    private CommandType commandType;
-    private String description;
-    private String from;
-    private String to;
+    private final CommandType commandType;
+    private final String description;
+    private final String from;
+    private final String to;
 
     /**
      * Constructs a command with the given type and all optional arguments.
@@ -53,14 +53,6 @@ public class Command {
      */
     public Command(CommandType commandType, String description) {
         this(commandType, description, null, null);
-    }
-
-    /**
-     * Constructs an empty command with null type and description.
-     * Used to initialize commands before parsing.
-     */
-    public Command() {
-        this(null, null);
     }
 
     /**
