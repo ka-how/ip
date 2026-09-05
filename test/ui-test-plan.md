@@ -245,6 +245,21 @@ Here are the tasks in your list:
 Bye! Have a nice day!
 ```
 
+## Test case 8: blank input is handled as a chatbot error
+
+Aim: Verify that a blank command is reported through the chatbot's normal
+error-handling path and that the app continues accepting commands.
+
+Inputs:
+- *(blank line)*
+- `bye`
+
+Expected output after the welcome banner:
+```text
+Please provide an input
+Bye! Have a nice day!
+```
+
 ## Example transcript format
 
 A valid test transcript should show the exact console input and output used during a session, for example:
