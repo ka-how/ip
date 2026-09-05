@@ -96,6 +96,9 @@ public class UserInterface {
         System.out.println("Here are the tasks in your list:");
 
         int size = TaskManager.getSize();
+        if (size == 0) {
+            System.out.println("Your task list is empty. Available commands: bye, list, todo, deadline, event, mark, unmark.");
+        }
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
             System.out.println(formatTaskDetails(TaskManager.getTask(i + 1)));

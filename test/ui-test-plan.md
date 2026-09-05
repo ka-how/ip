@@ -35,7 +35,8 @@ ____________________________________________________________
 
 ## Test case 2: empty list
 
-Aim: Confirm that the app prints the empty-task list message without errors.
+Aim: Confirm that the app explains that the task list is empty and shows the
+available commands.
 
 Inputs:
 - `list`
@@ -54,6 +55,7 @@ How can I help you today?
 ____________________________________________________________
 ____________________________________________________________
 Here are the tasks in your list:
+Your task list is empty. Available commands: bye, list, todo, deadline, event, mark, unmark.
 ____________________________________________________________
 ____________________________________________________________
 Bye! Have a nice day!
@@ -168,6 +170,7 @@ Unknown command 'buy'. Available commands: bye, list, todo, deadline, event, mar
 ____________________________________________________________
 ____________________________________________________________
 Here are the tasks in your list:
+Your task list is empty. Available commands: bye, list, todo, deadline, event, mark, unmark.
 ____________________________________________________________
 ```
 
@@ -296,6 +299,7 @@ Expected output after the welcome banner:
 The 'list' command does not accept arguments. Enter only 'list'.
 The 'bye' command does not accept arguments. Enter only 'bye'.
 Here are the tasks in your list:
+Your task list is empty. Available commands: bye, list, todo, deadline, event, mark, unmark.
 Bye! Have a nice day!
 ```
 
