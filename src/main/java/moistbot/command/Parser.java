@@ -1,3 +1,7 @@
+package moistbot.command;
+
+import moistbot.exception.MoistBotException;
+
 /**
  * Parses raw user input into a {@link Command} object understood by MoistBot.
  * The parser normalizes whitespace, identifies command keywords, and validates

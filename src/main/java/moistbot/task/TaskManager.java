@@ -1,3 +1,7 @@
+package moistbot.task;
+
+import moistbot.exception.MoistBotException;
+
 /**
  * Manages a static list of tasks stored in memory.
  * Provides functionality to add tasks of various types (todo, deadline, event)

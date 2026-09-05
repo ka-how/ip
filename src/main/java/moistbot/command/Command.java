@@ -1,3 +1,5 @@
+package moistbot.command;
+
 /**
  * Represents a user command parsed from console input.
  * The command type identifies the action to perform, while optional string fields

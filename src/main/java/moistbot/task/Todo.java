@@ -1,3 +1,5 @@
+package moistbot.task;
+
 /**
  * Represents a basic todo item with no date or time attached.
  * Extends Task to provide a convenient constructor for creating simple to-do tasks.

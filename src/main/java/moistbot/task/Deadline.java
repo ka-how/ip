@@ -1,3 +1,5 @@
+package moistbot.task;
+
 /**
  * Represents a task with a specific deadline.
  * Extends Task to add a deadline field, displayed when the task is converted to a string.
