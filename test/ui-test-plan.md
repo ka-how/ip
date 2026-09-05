@@ -171,6 +171,80 @@ Here are the tasks in your list:
 ____________________________________________________________
 ```
 
+## Test case 6: malformed additions preserve existing tasks
+
+Aim: Verify that malformed `todo`, `deadline`, and `event` commands are
+rejected without adding partial tasks, even when they are interleaved with
+valid additions.
+
+Inputs:
+- `todo submit assignment`
+- `todo`
+- `deadline pay bills /by`
+- `deadline revise notes /by Friday`
+- `event meeting /from 2pm`
+- `event lab /from 10am /to 12pm`
+- `list`
+- `bye`
+
+Expected output after the welcome banner:
+```text
+Task added!
+[T][ ] submit assignment
+Now you have 1 tasks in the list
+Description missing. Usage: todo <description>
+Invalid command. Usage: deadline <desc> /by <time>
+Task added!
+[D][ ] revise notes (by: Friday)
+Now you have 2 tasks in the list
+Invalid command. Usage: event <desc> /from <time> /to <time>
+Task added!
+[E][ ] lab (from: 10am to: 12pm)
+Now you have 3 tasks in the list
+Here are the tasks in your list:
+1.[T][ ] submit assignment
+2.[D][ ] revise notes (by: Friday)
+3.[E][ ] lab (from: 10am to: 12pm)
+Bye! Have a nice day!
+```
+
+## Test case 7: invalid mark and unmark preserve completion state
+
+Aim: Verify that invalid task indexes and non-integer arguments do not change
+the completion state set by valid `mark` and `unmark` commands.
+
+Inputs:
+- `todo read book`
+- `mark 1`
+- `mark 2`
+- `unmark one`
+- `list`
+- `unmark 1`
+- `unmark 0`
+- `mark 1 extra`
+- `list`
+- `bye`
+
+Expected output after the welcome banner:
+```text
+Task added!
+[T][ ] read book
+Now you have 1 tasks in the list
+Task marked as complete!
+[T][X] read book
+Task not found
+Please provide an integer argument
+Here are the tasks in your list:
+1.[T][X] read book
+Task marked as incomplete
+[T][ ] read book
+Task not found
+Please provide an integer argument
+Here are the tasks in your list:
+1.[T][ ] read book
+Bye! Have a nice day!
+```
+
 ## Example transcript format
 
 A valid test transcript should show the exact console input and output used during a session, for example:
