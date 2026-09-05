@@ -1,3 +1,12 @@
+package moistbot;
+
+import moistbot.command.Command;
+import moistbot.command.Parser;
+import moistbot.exception.MoistBotException;
+import moistbot.task.Task;
+import moistbot.task.TaskManager;
+import moistbot.ui.UserInterface;
+
 import java.util.Scanner;
 
 /**

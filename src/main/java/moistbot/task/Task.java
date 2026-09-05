@@ -1,3 +1,5 @@
+package moistbot.task;
+
 /**
  * Represents a single task in the task list.
  * Each task has a description and a completion status that can be toggled.

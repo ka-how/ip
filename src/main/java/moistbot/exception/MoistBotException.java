@@ -1,3 +1,5 @@
+package moistbot.exception;
+
 /**
  * Represents an error caused by invalid MoistBot commands or task operations.
  */

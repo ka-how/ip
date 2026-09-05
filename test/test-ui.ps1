@@ -30,13 +30,13 @@ function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected) {
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
     }
 
-    $javaFiles = Get-ChildItem -Path $srcDir -Filter '*.java' | Select-Object -ExpandProperty FullName
+    $javaFiles = Get-ChildItem -Path $srcDir -Filter '*.java' -Recurse | Select-Object -ExpandProperty FullName
     javac -d $outDir $javaFiles *> $null
     if ($LASTEXITCODE -ne 0) {
         throw "Compilation failed while building MoistBot before running $name."
     }
 
-    $actual = @($caseCommands) | java -cp $outDir MoistBot 2>&1 | Out-String
+    $actual = @($caseCommands) | java -cp $outDir moistbot.MoistBot 2>&1 | Out-String
     $actualText = Normalize-Output $actual
     $expectedText = Normalize-Output $expected
 

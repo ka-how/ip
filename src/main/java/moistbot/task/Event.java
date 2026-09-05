@@ -1,3 +1,5 @@
+package moistbot.task;
+
 /**
  * Represents a task that occurs during a specific time period.
  * Extends Task to add start and end time fields, displayed when the task is converted to a string.

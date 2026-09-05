@@ -1,3 +1,8 @@
+package moistbot.ui;
+
+import moistbot.task.Task;
+import moistbot.task.TaskManager;
+
 /**
  * Handles all user interface output and formatting for the task manager application.
  * Provides methods to display welcome messages, task lists, and confirmations
