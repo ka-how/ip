@@ -88,18 +88,17 @@ public class UserInterface {
 
     /**
      * Displays all tasks in the list with 1-based indexing.
-     * Each task is displayed with its completion status and details.
-     *
-     * @param tasks The array containing tasks to display
-     * @param size The number of tasks currently in the list
+     * Retrieves tasks individually from {@link TaskManager} so that the manager's
+     * underlying storage remains encapsulated.
      */
-    public static void printTasks(Task[] tasks, int size) {
+    public static void printTasks() {
         System.out.println(DIVIDER);
         System.out.println("Here are the tasks in your list:");
 
+        int size = TaskManager.getSize();
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
-            System.out.println(formatTaskDetails(tasks[i]));
+            System.out.println(formatTaskDetails(TaskManager.getTask(i + 1)));
         }
 
         System.out.println(DIVIDER);

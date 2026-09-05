@@ -83,14 +83,4 @@ public class TaskManager {
     public static int getSize() {
         return size;
     }
-
-    /**
-     * Returns the underlying task array.
-     * Note: The array may contain null elements after the last valid task.
-     *
-     * @return The task array with capacity for up to 100 tasks
-     */
-    public static Task[] getTaskArray() {
-        return TASK_ARRAY;
-    }
 }

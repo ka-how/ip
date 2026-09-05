@@ -20,16 +20,27 @@ public class MoistBot {
     public static void main(String[] args) {
         UserInterface.printWelcome();
 
-        boolean exit = false;
+        boolean isExit = false;
         try (Scanner in = new Scanner(System.in)) {
-            while (!exit && in.hasNextLine()) {
-                try {
-                    Command command = Parser.parseInput(in.nextLine());
-                    exit = execute(command);
-                } catch (IllegalArgumentException e) {
-                    UserInterface.printMessage(e.getMessage());
-                }
+            while (!isExit && in.hasNextLine()) {
+                isExit = processCommand(in.nextLine());
             }
+        }
+    }
+
+    /**
+     * Parses and executes one user command, displaying any input error to the user.
+     *
+     * @param input the command entered by the user
+     * @return whether the command requests the application to exit
+     */
+    private static boolean processCommand(String input) {
+        try {
+            Command command = Parser.parseInput(input);
+            return execute(command);
+        } catch (IllegalArgumentException e) {
+            UserInterface.printMessage(e.getMessage());
+            return false;
         }
     }
 
@@ -80,7 +91,7 @@ public class MoistBot {
      * @return Always returns false to continue execution
      */
     private static boolean executeList() {
-        UserInterface.printTasks(TaskManager.getTaskArray(), TaskManager.getSize());
+        UserInterface.printTasks();
         return false;
     }
 
