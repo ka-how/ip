@@ -6,13 +6,13 @@
 public class Parser {
     private static final String DEADLINE_USAGE = "deadline <desc> /by <time>";
     private static final String EVENT_USAGE = "event <desc> /from <time> /to <time>";
-    private static final String DEADLINE_SEPARATOR = " /by ";
-    private static final String EVENT_FROM_SEPARATOR = " /from ";
-    private static final String EVENT_TO_SEPARATOR = " /to ";
-    private static final String INPUT_ERROR = "Please provide an input";
-    private static final String DESC_MISSING = "Description missing. Usage: ";
-    private static final String ARG_MISSING = "Missing argument";
-    private static final String UNKNOWN_COMMAND = "Unknown command: ";
+    private static final String DEADLINE_SEPARATOR = "/by";
+    private static final String EVENT_FROM_SEPARATOR = "/from";
+    private static final String EVENT_TO_SEPARATOR = "/to";
+    private static final String INPUT_ERROR = "Input cannot be empty. Enter a command such as 'list' or "
+            + "'todo buy milk'.";
+    private static final String UNKNOWN_COMMAND = "Unknown command '%s'. Available commands: bye, list, todo, "
+            + "deadline, event, mark, unmark.";
     /**
      * Parses a user-entered line into a command object.
      * Recognizes command keywords (bye, list, mark, unmark, todo, deadline, event)
@@ -62,9 +62,9 @@ public class Parser {
     private static Command parseCommand(String commandText, String[] inputArray) throws MoistBotException {
         switch (commandText) {
             case "bye":
-                return new Command(Command.CommandType.BYE, null);
+                return parseCommandWithoutArguments(Command.CommandType.BYE, inputArray);
             case "list":
-                return new Command(Command.CommandType.LIST, null);
+                return parseCommandWithoutArguments(Command.CommandType.LIST, inputArray);
             case "mark":
                 return parseMarkOrUnmark(Command.CommandType.MARK, inputArray);
             case "unmark":
@@ -76,8 +76,26 @@ public class Parser {
             case "event":
                 return parseEventCommand(inputArray);
             default:
-                throw new MoistBotException(UNKNOWN_COMMAND + commandText);
+                throw new MoistBotException(String.format(UNKNOWN_COMMAND, commandText));
         }
+    }
+
+    /**
+     * Parses a command that must not have arguments.
+     *
+     * @param commandType The command type to create
+     * @param inputArray The array containing the command and any supplied text
+     * @return A parsed command without arguments
+     * @throws MoistBotException if unexpected text follows the command
+     */
+    private static Command parseCommandWithoutArguments(Command.CommandType commandType, String[] inputArray)
+            throws MoistBotException {
+        if (inputArray.length > 1) {
+            String commandName = commandType.name().toLowerCase();
+            throw new MoistBotException("The '" + commandName + "' command does not accept arguments. "
+                    + "Enter only '" + commandName + "'.");
+        }
+        return new Command(commandType, null);
     }
 
     /**
@@ -90,14 +108,17 @@ public class Parser {
      */
     private static Command parseMarkOrUnmark(Command.CommandType commandType, String[] inputArray)
             throws MoistBotException {
+        String commandName = commandType.name().toLowerCase();
         if (inputArray.length < 2) {
-            throw new MoistBotException(ARG_MISSING);
+            throw new MoistBotException("Task number missing. Usage: " + commandName + " <task number>, "
+                    + "for example '" + commandName + " 1'.");
         }
         try {
             Integer.parseInt(inputArray[1]);
             return new Command(commandType, inputArray[1]);
         } catch (NumberFormatException e) {
-            throw new MoistBotException("Please provide an integer argument");
+            throw new MoistBotException("Invalid task number '" + inputArray[1] + "'. Enter one whole number, "
+                    + "for example '" + commandName + " 1'.");
         }
     }
 
@@ -110,7 +131,8 @@ public class Parser {
      */
     private static Command parseTodo(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-            throw new MoistBotException(DESC_MISSING + "todo <description>");
+            throw new MoistBotException("Todo description missing. Usage: todo <description>, for example "
+                    + "'todo buy milk'.");
         }
         return new Command(Command.CommandType.TODO, inputArray[1].trim());
     }
@@ -124,7 +146,8 @@ public class Parser {
      */
     private static Command parseDeadlineCommand(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-            throw new MoistBotException(DESC_MISSING + DEADLINE_USAGE);
+            throw new MoistBotException("Deadline description and time missing. Usage: " + DEADLINE_USAGE
+                    + ", for example 'deadline return book /by Friday'.");
         }
         return parseDeadline(inputArray[1]);
     }
@@ -138,7 +161,8 @@ public class Parser {
      */
     private static Command parseEventCommand(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-            throw new MoistBotException(DESC_MISSING + EVENT_USAGE);
+            throw new MoistBotException("Event description and times missing. Usage: " + EVENT_USAGE
+                    + ", for example 'event meeting /from 2pm /to 4pm'.");
         }
         return parseEvent(inputArray[1]);
     }
@@ -152,19 +176,24 @@ public class Parser {
      * @throws MoistBotException if the format is invalid or required fields are missing
      */
     public static Command parseDeadline(String inputString) throws MoistBotException {
-        if (!inputString.contains(DEADLINE_SEPARATOR)) {
-            throw new MoistBotException("Invalid command. Usage: " + DEADLINE_USAGE);
+        int separatorIndex = findSeparatorIndex(inputString, DEADLINE_SEPARATOR, 0);
+        if (separatorIndex < 0) {
+            throw new MoistBotException("Deadline separator '/by' missing. Usage: " + DEADLINE_USAGE + ".");
+        }
+        if (findSeparatorIndex(inputString, DEADLINE_SEPARATOR,
+                separatorIndex + DEADLINE_SEPARATOR.length()) >= 0) {
+            throw new MoistBotException("A deadline can contain only one '/by' separator. Usage: "
+                    + DEADLINE_USAGE + ".");
         }
 
-        String[] inputArray = inputString.split(DEADLINE_SEPARATOR, 2);
-        String description = inputArray[0].trim();
-        String by = inputArray[1].trim();
+        String description = inputString.substring(0, separatorIndex).trim();
+        String by = inputString.substring(separatorIndex + DEADLINE_SEPARATOR.length()).trim();
 
         if (description.isEmpty()) {
-            throw new MoistBotException(DESC_MISSING + DEADLINE_USAGE);
+            throw new MoistBotException("Deadline description missing before '/by'. Usage: " + DEADLINE_USAGE + ".");
         }
         if (by.isEmpty()) {
-            throw new MoistBotException("Deadline missing. Usage: " + DEADLINE_USAGE);
+            throw new MoistBotException("Deadline time missing after '/by'. Usage: " + DEADLINE_USAGE + ".");
         }
 
         return new Command(Command.CommandType.DEADLINE, description, null, by);
@@ -178,25 +207,65 @@ public class Parser {
      * @throws MoistBotException if the format is invalid or required fields are missing
      */
     public static Command parseEvent(String inputString) throws MoistBotException {
-        if (!(inputString.contains(EVENT_FROM_SEPARATOR) && inputString.contains(EVENT_TO_SEPARATOR))) {
-            throw new MoistBotException("Invalid command. Usage: " + EVENT_USAGE);
+        int fromIndex = findSeparatorIndex(inputString, EVENT_FROM_SEPARATOR, 0);
+        int toIndex = findSeparatorIndex(inputString, EVENT_TO_SEPARATOR, 0);
+        if (fromIndex < 0) {
+            throw new MoistBotException("Event start separator '/from' missing. Usage: " + EVENT_USAGE + ".");
+        }
+        if (toIndex < 0) {
+            throw new MoistBotException("Event end separator '/to' missing. Usage: " + EVENT_USAGE + ".");
+        }
+        if (fromIndex > toIndex) {
+            throw new MoistBotException("Event times are in the wrong order. Put '/from' before '/to'. Usage: "
+                    + EVENT_USAGE + ".");
+        }
+        if (findSeparatorIndex(inputString, EVENT_FROM_SEPARATOR,
+                fromIndex + EVENT_FROM_SEPARATOR.length()) >= 0
+                || findSeparatorIndex(inputString, EVENT_TO_SEPARATOR,
+                toIndex + EVENT_TO_SEPARATOR.length()) >= 0) {
+            throw new MoistBotException("An event must contain exactly one '/from' and one '/to' separator. Usage: "
+                    + EVENT_USAGE + ".");
         }
 
-        String[] inputArray = inputString.split(EVENT_FROM_SEPARATOR + "|" + EVENT_TO_SEPARATOR, 3);
-        String description = inputArray[0].trim();
-        String from = inputArray[1].trim();
-        String to = inputArray[2].trim();
+        String description = inputString.substring(0, fromIndex).trim();
+        String from = inputString.substring(fromIndex + EVENT_FROM_SEPARATOR.length(), toIndex).trim();
+        String to = inputString.substring(toIndex + EVENT_TO_SEPARATOR.length()).trim();
 
         if (description.isEmpty()) {
-            throw new MoistBotException(DESC_MISSING + EVENT_USAGE);
+            throw new MoistBotException("Event description missing before '/from'. Usage: " + EVENT_USAGE + ".");
         }
         if (from.isEmpty()) {
-            throw new MoistBotException("Time missing. Usage: " + EVENT_USAGE);
+            throw new MoistBotException("Event start time missing after '/from'. Usage: " + EVENT_USAGE + ".");
         }
         if (to.isEmpty()) {
-            throw new MoistBotException("Time missing. Usage: " + EVENT_USAGE);
+            throw new MoistBotException("Event end time missing after '/to'. Usage: " + EVENT_USAGE + ".");
         }
 
         return new Command(Command.CommandType.EVENT, description, from, to);
+    }
+
+    /**
+     * Finds a separator only when it appears as a distinct whitespace-delimited token.
+     * This prevents text such as "/bypass" from being mistaken for the "/by" separator.
+     *
+     * @param inputString The command arguments to search
+     * @param separator The separator token to find
+     * @param startIndex The index at which to begin searching
+     * @return The separator index, or -1 if no complete separator token exists
+     */
+    private static int findSeparatorIndex(String inputString, String separator, int startIndex) {
+        int separatorIndex = inputString.indexOf(separator, startIndex);
+        while (separatorIndex >= 0) {
+            int afterSeparator = separatorIndex + separator.length();
+            boolean hasValidStart = separatorIndex == 0
+                    || Character.isWhitespace(inputString.charAt(separatorIndex - 1));
+            boolean hasValidEnd = afterSeparator == inputString.length()
+                    || Character.isWhitespace(inputString.charAt(afterSeparator));
+            if (hasValidStart && hasValidEnd) {
+                return separatorIndex;
+            }
+            separatorIndex = inputString.indexOf(separator, separatorIndex + separator.length());
+        }
+        return -1;
     }
 }

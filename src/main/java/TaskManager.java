@@ -54,7 +54,7 @@ public class TaskManager {
      */
     private static Task addTask(Task task) throws MoistBotException {
         if (size == MAX_TASKS) {
-            throw new MoistBotException("Memory full!");
+            throw new MoistBotException("Task list is full (maximum 100 tasks). No task was added.");
         }
         TASK_ARRAY[size] = task;
         size++;

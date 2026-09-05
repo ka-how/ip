@@ -41,6 +41,10 @@ public class MoistBot {
         } catch (MoistBotException e) {
             UserInterface.printMessage(e.getMessage());
             return false;
+        } catch (RuntimeException e) {
+            UserInterface.printMessage("MoistBot could not process that command because of an unexpected internal "
+                    + "error. Check the command format and try again. If the error repeats, restart MoistBot.");
+            return false;
         }
     }
 
@@ -153,10 +157,7 @@ public class MoistBot {
      */
     private static boolean executeMark(String description) throws MoistBotException {
         int markIndex = Integer.parseInt(description);
-        Task task = TaskManager.getTask(markIndex);
-        if (task == null) {
-            throw new MoistBotException("Task not found");
-        }
+        Task task = getExistingTask(markIndex, "mark");
         task.setCompleted(true);
         UserInterface.printMarkTask(task);
         return false;
@@ -171,12 +172,33 @@ public class MoistBot {
      */
     private static boolean executeUnmark(String description) throws MoistBotException {
         int unmarkIndex = Integer.parseInt(description);
-        Task task = TaskManager.getTask(unmarkIndex);
-        if (task == null) {
-            throw new MoistBotException("Task not found");
-        }
+        Task task = getExistingTask(unmarkIndex, "unmark");
         task.setCompleted(false);
         UserInterface.printUnmarkTask(task);
         return false;
+    }
+
+    /**
+     * Retrieves a task and explains how to correct an invalid task number.
+     *
+     * @param taskNumber The 1-based number supplied by the user
+     * @param commandName The command being executed
+     * @return The task identified by the supplied number
+     * @throws MoistBotException if the task number does not identify an existing task
+     */
+    private static Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
+        int taskCount = TaskManager.getSize();
+        if (taskCount == 0) {
+            throw new MoistBotException("Cannot " + commandName + " a task because the task list is empty. "
+                    + "Add a task first, then use '" + commandName + " <task number>'.");
+        }
+        if (taskNumber < 1) {
+            throw new MoistBotException("Task number must be at least 1. Use 'list' to see valid task numbers.");
+        }
+        if (taskNumber > taskCount) {
+            throw new MoistBotException("Task " + taskNumber + " does not exist. Choose a number from 1 to "
+                    + taskCount + ". Use 'list' to see the tasks.");
+        }
+        return TaskManager.getTask(taskNumber);
     }
 }
