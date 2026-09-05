@@ -4,8 +4,11 @@
  * Tasks can be of different types (todo, deadline, event) identified by a character code.
  */
 public class Task {
+    /** Type identifier used for basic todo tasks. */
     public static final char TYPE_TODO = 'T';
+    /** Type identifier used for deadline tasks. */
     public static final char TYPE_DEADLINE = 'D';
+    /** Type identifier used for event tasks. */
     public static final char TYPE_EVENT = 'E';
 
     private final String description;

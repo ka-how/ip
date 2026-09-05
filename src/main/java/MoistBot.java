@@ -6,7 +6,13 @@ import java.util.Scanner;
  * Parsing and command handling are separated into helper classes (Parser, Command, TaskManager)
  * for clarity, maintainability, and easier testing.
  */
-public class MoistBot {
+public final class MoistBot {
+    /**
+     * Prevents instantiation because the application is started through {@link #main(String[])}.
+     */
+    private MoistBot() {
+    }
+
     /**
      * Entry point of the MoistBot application.
      * Prints the startup message and delegates interactive command handling to the
@@ -38,8 +44,13 @@ public class MoistBot {
         try {
             Command command = Parser.parseInput(input);
             return execute(command);
-        } catch (IllegalArgumentException e) {
+        } catch (MoistBotException e) {
             UserInterface.printMessage(e.getMessage());
+            return false;
+        } catch (RuntimeException e) {
+            UserInterface.printMessage("My apologies, but I could not process that command because of an unexpected "
+                    + "internal error. Please check the command format and try again. If the matter persists, "
+                    + "please restart MoistBot.");
             return false;
         }
     }
@@ -52,7 +63,7 @@ public class MoistBot {
      * @param command The parsed command object to execute
      * @return True if the application should exit, false otherwise
      */
-    private static boolean execute(Command command) {
+    private static boolean execute(Command command) throws MoistBotException {
         Command.CommandType commandType = command.getCommandType();
 
         switch (commandType) {
@@ -71,7 +82,7 @@ public class MoistBot {
             case UNMARK:
                 return executeUnmark(command.getDescription());
             default:
-                throw new IllegalArgumentException("Unsupported command");
+                throw new MoistBotException("My apologies, but that command is not supported.");
         }
     }
 
@@ -100,8 +111,9 @@ public class MoistBot {
      *
      * @param description The description of the todo task
      * @return Always returns false to continue execution
+     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeTodo(String description) {
+    private static boolean executeTodo(String description) throws MoistBotException {
         return executeAddTask(TaskManager.addTodo(description));
     }
 
@@ -111,8 +123,10 @@ public class MoistBot {
      * @param description The description of the deadline task
      * @param by The deadline for the task
      * @return Always returns false to continue execution
+     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeDeadline(String description, String by) {
+    private static boolean executeDeadline(String description, String by)
+            throws MoistBotException {
         return executeAddTask(TaskManager.addDeadline(description, by));
     }
 
@@ -123,8 +137,10 @@ public class MoistBot {
      * @param from The start time of the event
      * @param to The end time of the event
      * @return Always returns false to continue execution
+     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeEvent(String description, String from, String to) {
+    private static boolean executeEvent(String description, String from, String to)
+            throws MoistBotException {
         return executeAddTask(TaskManager.addEvent(description, from, to));
     }
 
@@ -144,14 +160,11 @@ public class MoistBot {
      *
      * @param description The 1-based index of the task to mark
      * @return Always returns false to continue execution
-     * @throws IllegalArgumentException if the task index is invalid
+     * @throws MoistBotException if the task index is invalid
      */
-    private static boolean executeMark(String description) {
+    private static boolean executeMark(String description) throws MoistBotException {
         int markIndex = Integer.parseInt(description);
-        Task task = TaskManager.getTask(markIndex);
-        if (task == null) {
-            throw new IllegalArgumentException("Task not found");
-        }
+        Task task = getExistingTask(markIndex, "mark");
         task.setCompleted(true);
         UserInterface.printMarkTask(task);
         return false;
@@ -162,16 +175,39 @@ public class MoistBot {
      *
      * @param description The 1-based index of the task to unmark
      * @return Always returns false to continue execution
-     * @throws IllegalArgumentException if the task index is invalid
+     * @throws MoistBotException if the task index is invalid
      */
-    private static boolean executeUnmark(String description) {
+    private static boolean executeUnmark(String description) throws MoistBotException {
         int unmarkIndex = Integer.parseInt(description);
-        Task task = TaskManager.getTask(unmarkIndex);
-        if (task == null) {
-            throw new IllegalArgumentException("Task not found");
-        }
+        Task task = getExistingTask(unmarkIndex, "unmark");
         task.setCompleted(false);
         UserInterface.printUnmarkTask(task);
         return false;
+    }
+
+    /**
+     * Retrieves a task and explains how to correct an invalid task number.
+     *
+     * @param taskNumber The 1-based number supplied by the user
+     * @param commandName The command being executed
+     * @return The task identified by the supplied number
+     * @throws MoistBotException if the task number does not identify an existing task
+     */
+    private static Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
+        int taskCount = TaskManager.getSize();
+        if (taskCount == 0) {
+            throw new MoistBotException("My apologies, but I cannot " + commandName
+                    + " a task because your task list is empty. Please add a task first, then use '"
+                    + commandName + " <task number>'.");
+        }
+        if (taskNumber < 1) {
+            throw new MoistBotException("Please provide a task number of at least 1. Use 'list' to view the "
+                    + "available task numbers.");
+        }
+        if (taskNumber > taskCount) {
+            throw new MoistBotException("My apologies, but task " + taskNumber + " does not exist. Please choose a "
+                    + "number from 1 to " + taskCount + ". Use 'list' to view the tasks.");
+        }
+        return TaskManager.getTask(taskNumber);
     }
 }

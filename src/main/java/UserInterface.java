@@ -3,7 +3,7 @@
  * Provides methods to display welcome messages, task lists, and confirmations
  * with formatted output using visual dividers for better readability.
  */
-public class UserInterface {
+public final class UserInterface {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
             + "|  \\/  | / _ \\ |_ _|/ ___|_   _| __ ) / _ \\|_   _|\n"
             + "| |\\/| || | | | | | \\___ \\ | | |  _ \\| | | | | |\n"
@@ -12,14 +12,20 @@ public class UserInterface {
     private static final String DIVIDER = "____________________________________________________________";
 
     /**
+     * Prevents instantiation because all console output operations are stateless.
+     */
+    private UserInterface() {
+    }
+
+    /**
      * Displays the welcome message with the application banner and greeting.
      * Called when the application starts to introduce the user to MoistBot.
      */
     public static void printWelcome() {
         System.out.println(DIVIDER);
         System.out.println(BANNER);
-        System.out.println("Hello! I'm MoistBot");
-        System.out.println("How can I help you today?");
+        System.out.println("Good day. I am MoistBot, at your service.");
+        System.out.println("How may I assist you today?");
         System.out.println(DIVIDER);
     }
 
@@ -27,7 +33,7 @@ public class UserInterface {
      * Displays the exit message when the user quits the application.
      */
     public static void printExit() {
-        printMessage("Bye! Have a nice day!");
+        printMessage("Thank you for using MoistBot. Have a pleasant day.");
     }
 
     /**
@@ -38,7 +44,7 @@ public class UserInterface {
      * @param size The updated total number of tasks in the list
      */
     public static void printAddTask(Task task, int size) {
-        String header = "Task added!";
+        String header = "Certainly. I have added this task:";
         printMessage(header + "\n" + formatModifyTask(task, size));
     }
 
@@ -48,7 +54,7 @@ public class UserInterface {
      * @param task The task that was marked as complete
      */
     public static void printMarkTask(Task task) {
-        String header = "Task marked as complete!";
+        String header = "Certainly. I have marked this task as complete:";
         printMessage(header + "\n" + formatTaskDetails(task));
     }
 
@@ -58,7 +64,7 @@ public class UserInterface {
      * @param task The task that was marked as incomplete
      */
     public static void printUnmarkTask(Task task) {
-        String header = "Task marked as incomplete";
+        String header = "Certainly. I have marked this task as incomplete:";
         printMessage(header + "\n" + formatTaskDetails(task));
     }
 
@@ -71,7 +77,8 @@ public class UserInterface {
      * @return A formatted string with task details and task count
      */
     public static String formatModifyTask(Task task, int size) {
-        String ending = "Now you have " + size + " tasks in the list";
+        String taskNoun = size == 1 ? "task" : "tasks";
+        String ending = "Your list now contains " + size + " " + taskNoun + ".";
         return formatTaskDetails(task) + "\n" + ending;
     }
 
@@ -93,9 +100,13 @@ public class UserInterface {
      */
     public static void printTasks() {
         System.out.println(DIVIDER);
-        System.out.println("Here are the tasks in your list:");
+        System.out.println("Certainly. Here is your task list:");
 
         int size = TaskManager.getSize();
+        if (size == 0) {
+            System.out.println("Your task list is presently empty. You may use: bye, list, todo, deadline, event, "
+                    + "mark, or unmark.");
+        }
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
             System.out.println(formatTaskDetails(TaskManager.getTask(i + 1)));

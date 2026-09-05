@@ -11,17 +11,17 @@ public class Event extends Task {
      *
      * @param description The description of the event
      * @param from The start time of the event
-     * @param end The end time of the event
+     * @param to The end time of the event
      */
-    public Event(String description, String from, String end) {
+    public Event(String description, String from, String to) {
         super(description, TYPE_EVENT);
         this.from = from;
-        this.to = end;
+        this.to = to;
     }
 
     /**
      * Returns a string representation of the event task.
-     * Appends the time period in the format "(from: <start> to: <end>)" to the base task description.
+     * Appends the time period in the format {@code (from: <start> to: <end>)} to the task description.
      *
      * @return The formatted string with task description and time period
      */

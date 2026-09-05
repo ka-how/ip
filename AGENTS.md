@@ -56,14 +56,24 @@ All Java code must adhere to SE-Edu Java conventions including:
 
 For complete standards, see `SEEDU_JAVA_CODING_STANDARD.md` or https://se-education.org/guides/conventions/java/intermediate.html
 
+## User-facing messages
+
+All new or revised messages shown by MoistBot must use a courteous,
+professional butler voice. Keep the wording clear and concise: acknowledge
+successful requests calmly, begin corrective feedback with an appropriate
+polite phrase such as "Please" or "My apologies", and always explain the next
+action the user can take. Preserve this tone consistently across UI output,
+validation errors, and unexpected-error fallbacks.
+
 ## Post-update verification
 
-After every code update, do the following before finalising the work. If a
-test case fails, stop the test session immediately and report its actual and
-expected outputs.
+After every code update, agents **must** complete both steps below before
+finalising the work. If a test case fails, stop the test session immediately
+and report its actual and expected outputs.
 
-1. Review whether `test/ui-test-plan.md` needs to be updated to match the new or changed behaviour.
-   - If the UI, command flow, or output format changes, add or modify the relevant test entries with the aim, inputs, and expected output.
+1. Update `test/ui-test-plan.md` if needed to match the new or changed behaviour.
+   - Add or modify relevant cases whenever a change introduces, fixes, or refactors observable behaviour, including error handling. Each case must state its aim, inputs, and expected output.
+   - If a change is not observable through the UI, add or update the closest automated test that verifies the changed code path, and record why no UI test-plan change is needed.
 2. Invoke the `test-ui` skill to run the relevant UI regression checks.
    - The skill should run the program, capture the console input and output, compare actual vs expected output, and stop immediately on the first failed case.
-3. If no plan change is needed, still run the `test-ui` skill with the most relevant cases to confirm the app still behaves as expected.
+   - If no plan change is needed, still run the most relevant cases to confirm the app behaves as expected.

@@ -1,198 +1,152 @@
 # UI test plan for MoistBot
 
-This plan records the console UI checks for the MoistBot command-line app. Each case lists the test aim, the inputs to send, and the expected output to verify.
+Each case is run by `test/test-ui.ps1`, which verifies the full, exact console
+transcript (including banner and dividers) and stops at the first mismatch.
 
-## General test procedure
+## Shared output framing
 
-- Compile the Java sources into `out/`.
-- Launch `MoistBot` with the input commands listed for the test case.
-- Capture the full console transcript, including both input and output.
-- Compare the actual console output against the expected output.
-- If a mismatch is found, stop the session immediately and report the actual vs expected output.
+Every transcript begins with the banner followed by:
+
+```text
+Good day. I am MoistBot, at your service.
+How may I assist you today?
+```
+
+Each response is surrounded by the underscore divider. A successful `bye`
+command ends with:
+
+```text
+Thank you for using MoistBot. Have a pleasant day.
+```
 
 ## Test case 1: startup and exit
 
-Aim: Confirm that the welcome banner is printed and the app exits cleanly when the user enters `bye`.
+Aim: Confirm that the professional greeting and farewell are displayed.
 
-Inputs:
-- `bye`
+Inputs: `bye`
 
-Expected output:
-```text
-____________________________________________________________
- __  __   ___   ___ ____ _____ ____   ___ _____
-|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|
-| |\/| || | | | | | \___ \ | | |  _ \| | | | | |
-| |  | || |_| | | |  ___) || | | |_) | |_| | | |
-|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_| 
-Hello! I'm MoistBot
-How can I help you today?
-____________________________________________________________
-____________________________________________________________
-Bye! Have a nice day!
-____________________________________________________________
-```
+Expected output: The shared greeting, followed by the shared farewell.
 
 ## Test case 2: empty list
 
-Aim: Confirm that the app prints the empty-task list message without errors.
+Aim: Confirm that an empty list is described courteously.
 
-Inputs:
-- `list`
-- `bye`
+Inputs: `list`, `bye`
 
 Expected output:
+
 ```text
-____________________________________________________________
- __  __   ___   ___ ____ _____ ____   ___ _____
-|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|
-| |\/| || | | | | | \___ \ | | |  _ \| | | | | |
-| |  | || |_| | | |  ___) || | | |_) | |_| | | |
-|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_| 
-Hello! I'm MoistBot
-How can I help you today?
-____________________________________________________________
-____________________________________________________________
-Here are the tasks in your list:
-____________________________________________________________
-____________________________________________________________
-Bye! Have a nice day!
-____________________________________________________________
+Certainly. Here is your task list:
+Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.
 ```
 
 ## Test case 3: add todo and list
 
-Aim: Verify that a todo is added correctly and then displayed in the task list.
+Aim: Confirm that adding and viewing a todo uses the courteous confirmation.
 
-Inputs:
-- `todo buy milk`
-- `list`
-- `bye`
+Inputs: `todo buy milk`, `list`, `bye`
 
 Expected output:
+
 ```text
-____________________________________________________________
- __  __   ___   ___ ____ _____ ____   ___ _____
-|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|
-| |\/| || | | | | | \___ \ | | |  _ \| | | | | |
-| |  | || |_| | | |  ___) || | | |_) | |_| | | |
-|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_| 
-Hello! I'm MoistBot
-How can I help you today?
-____________________________________________________________
-____________________________________________________________
-Task added!
+Certainly. I have added this task:
 [T][ ] buy milk
-Now you have 1 tasks in the list
-____________________________________________________________
-____________________________________________________________
-Here are the tasks in your list:
+Your list now contains 1 task.
+Certainly. Here is your task list:
 1.[T][ ] buy milk
-____________________________________________________________
-____________________________________________________________
-Bye! Have a nice day!
-____________________________________________________________
 ```
 
 ## Test case 4: add deadline, event, mark, and unmark
 
-Aim: Check that deadline and event tasks are parsed and listed, and that the completion toggle works correctly.
+Aim: Confirm that all successful task operations retain their behavior and use
+the new tone.
 
-Inputs:
-- `todo read book`
-- `deadline return book /by Friday`
-- `event team meeting /from 2pm /to 4pm`
-- `mark 2`
-- `list`
-- `unmark 2`
-- `bye`
+Inputs: `todo read book`, `deadline return book /by Friday`,
+`event team meeting /from 2pm /to 4pm`, `mark 2`, `list`, `unmark 2`, `bye`
 
-Expected output:
-```text
-____________________________________________________________
- __  __   ___   ___ ____ _____ ____   ___ _____
-|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|
-| |\/| || | | | | | \___ \ | | |  _ \| | | | | |
-| |  | || |_| | | |  ___) || | | |_) | |_| | | |
-|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_| 
-Hello! I'm MoistBot
-How can I help you today?
-____________________________________________________________
-____________________________________________________________
-Task added!
-[T][ ] read book
-Now you have 1 tasks in the list
-____________________________________________________________
-____________________________________________________________
-Task added!
-[D][ ] return book (by: Friday)
-Now you have 2 tasks in the list
-____________________________________________________________
-____________________________________________________________
-Task added!
-[E][ ] team meeting (from: 2pm to: 4pm)
-Now you have 3 tasks in the list
-____________________________________________________________
-____________________________________________________________
-Task marked as complete!
-[D][X] return book (by: Friday)
-____________________________________________________________
-____________________________________________________________
-Here are the tasks in your list:
-1.[T][ ] read book
-2.[D][X] return book (by: Friday)
-3.[E][ ] team meeting (from: 2pm to: 4pm)
-____________________________________________________________
-____________________________________________________________
-Task marked as incomplete
-[D][ ] return book (by: Friday)
-____________________________________________________________
-____________________________________________________________
-Bye! Have a nice day!
-____________________________________________________________
-```
+Expected output: Each addition begins “Certainly. I have added this task:”,
+the deadline is marked complete then incomplete, and the list contains all
+three tasks.
 
-## Test case 5: unrecognised input defaults to a todo
+## Test case 5: unrecognised command
 
-Aim: Verify that an unrecognised multi-word input is retained in full when it is treated as a todo.
+Aim: Confirm that an unknown command is declined politely without adding work.
 
-Inputs:
-- `buy groceries today`
-- `list`
-- `bye`
+Inputs: `buy groceries today`, `list`, `bye`
 
 Expected output:
-```text
-____________________________________________________________
-Task added!
-[T][ ] buy groceries today
-Now you have 1 tasks in the list
-____________________________________________________________
-____________________________________________________________
-Here are the tasks in your list:
-1.[T][ ] buy groceries today
-____________________________________________________________
-```
-
-## Example transcript format
-
-A valid test transcript should show the exact console input and output used during a session, for example:
 
 ```text
-Input:
-bye
-
-Output:
-____________________________________________________________
- __  __   ___   ___ ____ _____ ____   ___ _____
-|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|
-| |\/| || | | | | | \___ \ | | |  _ \| | | | | |
-| |  | || |_| | | |  ___) || | | |_) | |_| | | |
-|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_| 
-Hello! I'm MoistBot
-How can I help you today?
-____________________________________________________________
-____________________________________________________________
-Bye! Have a nice day!
-____________________________________________________________
+My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, and unmark.
 ```
+
+The following list remains empty as in test case 2.
+
+## Test case 6: malformed additions
+
+Aim: Confirm that malformed todo, deadline, and event commands provide polite,
+actionable corrections and do not add tasks.
+
+Inputs: the malformed command sequence in `test/test-ui.ps1` test case 6,
+followed by valid deadline and event commands, `list`, and `bye`.
+
+Expected output: Missing fields begin with “Please provide” or “Please
+include”; duplicate separators explain that only one is allowed. The final list
+contains only `revise notes` and `lab`.
+
+## Test case 7: invalid mark and unmark
+
+Aim: Confirm that invalid task numbers are declined politely and do not change
+the completion state.
+
+Inputs: the invalid index sequence in `test/test-ui.ps1` test case 7.
+
+Expected output: The empty-list, non-numeric, out-of-range, and malformed
+arguments explain the correction. Only `mark 1` and `unmark 1` change the
+status of `read book`.
+
+## Test case 8: blank input
+
+Aim: Confirm that a blank command is handled politely and the program remains
+available.
+
+Inputs: blank line, `bye`
+
+Expected output:
+
+```text
+Please enter a command, such as 'list' or 'todo buy milk'.
+```
+
+## Test case 9: arguments for argument-free commands
+
+Aim: Confirm that `list` and `bye` reject extra text politely.
+
+Inputs: `list now`, `bye now`, `list`, `bye`
+
+Expected output:
+
+```text
+The 'list' command does not accept arguments. Please enter only 'list'.
+The 'bye' command does not accept arguments. Please enter only 'bye'.
+```
+
+The app then prints the empty list and continues to the farewell.
+
+## Test case 10: task capacity
+
+Aim: Confirm that the 101st task is declined politely and the first 100 tasks
+remain intact.
+
+Inputs: `todo task 1` through `todo task 100`, `todo overflow task`, `list`,
+`bye`.
+
+Expected output: Each successful addition says “Certainly. I have added this
+task:” and reports the grammatically correct singular or plural count. The
+overflow response is:
+
+```text
+My apologies, but your task list is full (maximum 100 tasks). No task has been added.
+```
+
+The final list contains tasks 1 through 100 only.
