@@ -14,9 +14,9 @@ public class TaskManager {
      *
      * @param description The description of the todo task
      * @return The task that was added
-     * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
+     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addTodo(String description) {
+    public static Task addTodo(String description) throws MoistBotException {
         return addTask(new Todo(description));
     }
 
@@ -26,9 +26,9 @@ public class TaskManager {
      * @param description The description of the deadline task
      * @param by The deadline for the task
      * @return The task that was added
-     * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
+     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addDeadline(String description, String by) {
+    public static Task addDeadline(String description, String by) throws MoistBotException {
         return addTask(new Deadline(description, by));
     }
 
@@ -39,9 +39,9 @@ public class TaskManager {
      * @param from The start time of the event
      * @param to The end time of the event
      * @return The task that was added
-     * @throws IllegalArgumentException if the task list is at maximum capacity (100 tasks)
+     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addEvent(String description, String from, String to) {
+    public static Task addEvent(String description, String from, String to) throws MoistBotException {
         return addTask(new Event(description, from, to));
     }
 
@@ -50,11 +50,11 @@ public class TaskManager {
      *
      * @param task The task to store
      * @return The task that was stored
-     * @throws IllegalArgumentException if the task list is at maximum capacity
+     * @throws MoistBotException if the task list is at maximum capacity
      */
-    private static Task addTask(Task task) {
+    private static Task addTask(Task task) throws MoistBotException {
         if (size == MAX_TASKS) {
-            throw new IllegalArgumentException("Memory full!");
+            throw new MoistBotException("Memory full!");
         }
         TASK_ARRAY[size] = task;
         size++;
