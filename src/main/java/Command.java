@@ -5,22 +5,22 @@
  */
 public class Command {
     /**
-     * Enumeration of possible command types.
-     * BYE: exit the application
-     * LIST: display all tasks
-     * MARK: mark a task as completed
-     * UNMARK: mark a task as incomplete
-     * TODO: add a simple todo item
-     * DEADLINE: add a task with a deadline
-     * EVENT: add a task with a time range
+     * Identifies an action that MoistBot can perform.
      */
     public enum CommandType {
+        /** Exits the application. */
         BYE,
+        /** Displays all tasks. */
         LIST,
+        /** Marks a task as completed. */
         MARK,
+        /** Marks a task as incomplete. */
         UNMARK,
+        /** Adds a basic todo task. */
         TODO,
+        /** Adds a task with a deadline. */
         DEADLINE,
+        /** Adds a task with a time range. */
         EVENT
     }
 
@@ -58,7 +58,7 @@ public class Command {
     /**
      * Returns the command type.
      *
-     * @return The command type enum, or null if the command is empty
+     * @return the command type
      */
     public CommandType getCommandType() {
         return commandType;
@@ -69,25 +69,25 @@ public class Command {
      * For TODO/DEADLINE/EVENT commands, this is the task description.
      * For MARK/UNMARK commands, this is the 1-based task index.
      *
-     * @return The description or index provided with the command, or null if absent
+     * @return the description or index provided with the command, or {@code null} if absent
      */
     public String getDescription() {
         return description;
     }
 
     /**
-     * Returns the start time for event/deadline commands.
+     * Returns the start time for an event command.
      *
-     * @return The start time, or null if not applicable
+     * @return the start time, or {@code null} if not applicable
      */
     public String getFrom() {
         return from;
     }
 
     /**
-     * Returns the end time for event/deadline commands.
+     * Returns the deadline time or event end time.
      *
-     * @return The end time, or null if not applicable
+     * @return the deadline or end time, or {@code null} if not applicable
      */
     public String getTo() {
         return to;

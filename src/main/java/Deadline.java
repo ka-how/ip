@@ -18,7 +18,7 @@ public class Deadline extends Task {
 
     /**
      * Returns a string representation of the deadline task.
-     * Appends the deadline in the format "(by: <deadline>)" to the base task description.
+     * Appends the deadline in the format {@code (by: <deadline>)} to the base task description.
      *
      * @return The formatted string with task description and deadline
      */

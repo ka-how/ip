@@ -6,7 +6,13 @@ import java.util.Scanner;
  * Parsing and command handling are separated into helper classes (Parser, Command, TaskManager)
  * for clarity, maintainability, and easier testing.
  */
-public class MoistBot {
+public final class MoistBot {
+    /**
+     * Prevents instantiation because the application is started through {@link #main(String[])}.
+     */
+    private MoistBot() {
+    }
+
     /**
      * Entry point of the MoistBot application.
      * Prints the startup message and delegates interactive command handling to the
@@ -42,8 +48,9 @@ public class MoistBot {
             UserInterface.printMessage(e.getMessage());
             return false;
         } catch (RuntimeException e) {
-            UserInterface.printMessage("MoistBot could not process that command because of an unexpected internal "
-                    + "error. Check the command format and try again. If the error repeats, restart MoistBot.");
+            UserInterface.printMessage("My apologies, but I could not process that command because of an unexpected "
+                    + "internal error. Please check the command format and try again. If the matter persists, "
+                    + "please restart MoistBot.");
             return false;
         }
     }
@@ -75,7 +82,7 @@ public class MoistBot {
             case UNMARK:
                 return executeUnmark(command.getDescription());
             default:
-                throw new MoistBotException("Unsupported command");
+                throw new MoistBotException("My apologies, but that command is not supported.");
         }
     }
 
@@ -189,15 +196,17 @@ public class MoistBot {
     private static Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
         int taskCount = TaskManager.getSize();
         if (taskCount == 0) {
-            throw new MoistBotException("Cannot " + commandName + " a task because the task list is empty. "
-                    + "Add a task first, then use '" + commandName + " <task number>'.");
+            throw new MoistBotException("My apologies, but I cannot " + commandName
+                    + " a task because your task list is empty. Please add a task first, then use '"
+                    + commandName + " <task number>'.");
         }
         if (taskNumber < 1) {
-            throw new MoistBotException("Task number must be at least 1. Use 'list' to see valid task numbers.");
+            throw new MoistBotException("Please provide a task number of at least 1. Use 'list' to view the "
+                    + "available task numbers.");
         }
         if (taskNumber > taskCount) {
-            throw new MoistBotException("Task " + taskNumber + " does not exist. Choose a number from 1 to "
-                    + taskCount + ". Use 'list' to see the tasks.");
+            throw new MoistBotException("My apologies, but task " + taskNumber + " does not exist. Please choose a "
+                    + "number from 1 to " + taskCount + ". Use 'list' to view the tasks.");
         }
         return TaskManager.getTask(taskNumber);
     }

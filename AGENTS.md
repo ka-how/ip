@@ -56,6 +56,15 @@ All Java code must adhere to SE-Edu Java conventions including:
 
 For complete standards, see `SEEDU_JAVA_CODING_STANDARD.md` or https://se-education.org/guides/conventions/java/intermediate.html
 
+## User-facing messages
+
+All new or revised messages shown by MoistBot must use a courteous,
+professional butler voice. Keep the wording clear and concise: acknowledge
+successful requests calmly, begin corrective feedback with an appropriate
+polite phrase such as "Please" or "My apologies", and always explain the next
+action the user can take. Preserve this tone consistently across UI output,
+validation errors, and unexpected-error fallbacks.
+
 ## Post-update verification
 
 After every code update, agents **must** complete both steps below before

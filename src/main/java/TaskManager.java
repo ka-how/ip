@@ -4,10 +4,16 @@
  * and retrieve tasks by index.
  * The list can store up to 100 tasks using a fixed-size array.
  */
-public class TaskManager {
+public final class TaskManager {
     private static final int MAX_TASKS = 100;
     private static final Task[] TASK_ARRAY = new Task[MAX_TASKS];
     private static int size = 0;
+
+    /**
+     * Prevents instantiation because the application uses one shared in-memory task list.
+     */
+    private TaskManager() {
+    }
 
     /**
      * Adds a new todo task to the task list.
@@ -54,7 +60,8 @@ public class TaskManager {
      */
     private static Task addTask(Task task) throws MoistBotException {
         if (size == MAX_TASKS) {
-            throw new MoistBotException("Task list is full (maximum 100 tasks). No task was added.");
+            throw new MoistBotException("My apologies, but your task list is full (maximum 100 tasks). No task "
+                    + "has been added.");
         }
         TASK_ARRAY[size] = task;
         size++;
