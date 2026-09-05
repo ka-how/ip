@@ -12,15 +12,16 @@ public class Parser {
     private static final String INPUT_ERROR = "Please provide an input";
     private static final String DESC_MISSING = "Description missing. Usage: ";
     private static final String ARG_MISSING = "Missing argument";
+    private static final String UNKNOWN_COMMAND = "Unknown command: ";
     /**
      * Parses a user-entered line into a command object.
      * Recognizes command keywords (bye, list, mark, unmark, todo, deadline, event)
      * and delegates to specialized parsing methods for complex commands.
-     * Unrecognized commands default to todo.
      *
      * @param inputString The raw text entered by the user
      * @return A parsed command object
-     * @throws IllegalArgumentException if the input is blank, missing required arguments, or malformed
+     * @throws IllegalArgumentException if the input is blank, has an unknown command,
+     *                                  is missing required arguments, or is malformed
      */
     public static Command parseInput(String inputString) {
         String trimmedInput = validateInput(inputString);
@@ -75,7 +76,7 @@ public class Parser {
             case "event":
                 return parseEventCommand(inputArray);
             default:
-                return new Command(Command.CommandType.TODO, String.join(" ", inputArray));
+                throw new IllegalArgumentException(UNKNOWN_COMMAND + commandText);
         }
     }
 

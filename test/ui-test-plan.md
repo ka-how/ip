@@ -152,9 +152,9 @@ Bye! Have a nice day!
 ____________________________________________________________
 ```
 
-## Test case 5: unrecognised input defaults to a todo
+## Test case 5: unrecognised command
 
-Aim: Verify that an unrecognised multi-word input is retained in full when it is treated as a todo.
+Aim: Verify that an unrecognised command prints an error and does not add a task.
 
 Inputs:
 - `buy groceries today`
@@ -164,13 +164,10 @@ Inputs:
 Expected output:
 ```text
 ____________________________________________________________
-Task added!
-[T][ ] buy groceries today
-Now you have 1 tasks in the list
+Unknown command: buy
 ____________________________________________________________
 ____________________________________________________________
 Here are the tasks in your list:
-1.[T][ ] buy groceries today
 ____________________________________________________________
 ```
 
