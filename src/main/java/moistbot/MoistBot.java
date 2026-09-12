@@ -35,12 +35,24 @@ public final class MoistBot {
      */
     public static void main(String[] args) {
         UserInterface.printWelcome();
+        loadSavedTasks();
 
         boolean isExit = false;
         try (Scanner in = new Scanner(System.in)) {
             while (!isExit && in.hasNextLine()) {
                 isExit = processCommand(in.nextLine());
             }
+        }
+    }
+
+    /**
+     * Loads saved tasks while allowing the application to remain usable if loading fails.
+     */
+    private static void loadSavedTasks() {
+        try {
+            Storage.loadTasks();
+        } catch (MoistBotException e) {
+            UserInterface.printMessage(e.getMessage());
         }
     }
 

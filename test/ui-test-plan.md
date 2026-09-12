@@ -170,3 +170,52 @@ E | 0 | meeting | 2pm | 4pm
 
 Expected console output: The existing successful add and mark confirmations,
 followed by the shared farewell. Saving produces no additional console output.
+
+## Test case 12: saved tasks are loaded at startup
+
+Aim: Confirm that MoistBot restores todo, deadline, and event tasks together
+with their completion states before accepting the first command.
+
+Initial file at `data/moistbot.txt`:
+
+```text
+T | 1 | read book
+D | 0 | return book | Friday
+E | 0 | meeting | 2pm | 4pm
+```
+
+Inputs: `list`, `bye`
+
+Expected output:
+
+```text
+Certainly. Here is your task list:
+1.[T][X] read book
+2.[D][ ] return book (by: Friday)
+3.[E][ ] meeting (from: 2pm to: 4pm)
+```
+
+The shared farewell follows. Loading produces no additional console output.
+
+## Test case 13: invalid saved data is reported safely
+
+Aim: Confirm that malformed saved data does not crash MoistBot or partially
+populate the task list, and that the user receives an actionable explanation.
+
+Initial file at `data/moistbot.txt`:
+
+```text
+T | maybe | read book
+```
+
+Inputs: `list`, `bye`
+
+Expected output:
+
+```text
+My apologies, but I could not load your saved tasks because line 1 in data/moistbot.txt is invalid. Please correct or remove the file, then restart MoistBot.
+Certainly. Here is your task list:
+Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.
+```
+
+The shared farewell follows.

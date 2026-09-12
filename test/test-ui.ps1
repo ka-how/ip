@@ -8,7 +8,8 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $srcDir = Join-Path $projectRoot 'src\main\java'
 $outDir = Join-Path $projectRoot 'out'
-$dataFile = Join-Path $projectRoot 'data\moistbot.txt'
+$testWorkDir = Join-Path $projectRoot '_temp\ui-test'
+$dataFile = Join-Path $testWorkDir 'data\moistbot.txt'
 $divider = '____________________________________________________________'
 $welcome = "$divider`n __  __   ___   ___ ____ _____ ____   ___ _____`n|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|`n| |\/| || | | | | | \___ \ | | |  _ \| | | | | |`n| |  | || |_| | | |  ___) || | | |_) | |_| | | |`n|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_|`nGood day. I am MoistBot, at your service.`nHow may I assist you today?`n$divider"
 $exitMessage = 'Thank you for using MoistBot. Have a pleasant day.'
@@ -22,8 +23,14 @@ function Format-Session([string[]]$messages) {
     return "$welcome`n$divider`n" + ($messages -join "`n$divider`n$divider`n") + "`n$divider"
 }
 
-function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected, [string]$expectedStorage = $null) {
+function Run-Case(
+        [string]$name,
+        [string[]]$caseCommands,
+        [string]$expected,
+        [string]$expectedStorage = $null,
+        [string]$initialStorage = $null) {
     $shouldCheckStorage = $PSBoundParameters.ContainsKey('expectedStorage')
+    $shouldPrepareStorage = $PSBoundParameters.ContainsKey('initialStorage')
     Write-Host "=== Running $name ==="
     Write-Host 'Input:'
     $caseCommands | ForEach-Object { Write-Host $_ }
@@ -32,8 +39,16 @@ function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected, [st
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
     }
 
-    if ($shouldCheckStorage -and (Test-Path $dataFile)) {
+    if (-not (Test-Path $testWorkDir)) {
+        New-Item -ItemType Directory -Path $testWorkDir -Force | Out-Null
+    }
+    if (Test-Path $dataFile) {
         Remove-Item -LiteralPath $dataFile
+    }
+    if ($shouldPrepareStorage) {
+        $dataDir = Split-Path -Parent $dataFile
+        New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+        [System.IO.File]::WriteAllText($dataFile, $initialStorage, [System.Text.UTF8Encoding]::new($false))
     }
 
     $javaFiles = Get-ChildItem -Path $srcDir -Filter '*.java' -Recurse | Select-Object -ExpandProperty FullName
@@ -42,7 +57,12 @@ function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected, [st
         throw "Compilation failed while building MoistBot before running $name."
     }
 
-    $actual = @($caseCommands) | java -cp $outDir moistbot.MoistBot 2>&1 | Out-String
+    Push-Location $testWorkDir
+    try {
+        $actual = @($caseCommands) | java -cp $outDir moistbot.MoistBot 2>&1 | Out-String
+    } finally {
+        Pop-Location
+    }
     $actualText = Normalize-Output $actual
     $expectedText = Normalize-Output $expected
 
@@ -175,6 +195,28 @@ $cases += @{
     Storage = $storageContents
 }
 
+$loadedStorage = "T | 1 | read book`nD | 0 | return book | Friday`nE | 0 | meeting | 2pm | 4pm"
+$loadedListMessage = "Certainly. Here is your task list:`n1.[T][X] read book" `
+        + "`n2.[D][ ] return book (by: Friday)`n3.[E][ ] meeting (from: 2pm to: 4pm)"
+$cases += @{
+    Name = 'saved tasks are loaded at startup'
+    Commands = @('list', 'bye')
+    Messages = @($loadedListMessage, $exitMessage)
+    InitialStorage = $loadedStorage
+}
+
+$invalidStorageMessage = 'My apologies, but I could not load your saved tasks because line 1 in ' `
+        + 'data/moistbot.txt is invalid. Please correct or remove the file, then restart MoistBot.'
+$cases += @{
+    Name = 'invalid saved data is reported safely'
+    Commands = @('list', 'bye')
+    Messages = @(
+        $invalidStorageMessage,
+        "Certainly. Here is your task list:`n$emptyListMessage",
+        $exitMessage)
+    InitialStorage = 'T | maybe | read book'
+}
+
 $capacityCommands = @(1..100 | ForEach-Object { "todo task $_" }) + @('todo overflow task', 'list', 'bye')
 $capacityMessages = @(1..100 | ForEach-Object {
     $taskNoun = if ($_ -eq 1) { 'task' } else { 'tasks' }
@@ -188,7 +230,10 @@ $cases += @{ Name = 'task capacity error preserves the list'; Commands = $capaci
 
 Write-Host "Test plan: $PlanFile"
 foreach ($case in $cases) {
-    if ($case.ContainsKey('Storage')) {
+    if ($case.ContainsKey('InitialStorage')) {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
+                -initialStorage $case.InitialStorage
+    } elseif ($case.ContainsKey('Storage')) {
         Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
                 -expectedStorage $case.Storage
     } else {
