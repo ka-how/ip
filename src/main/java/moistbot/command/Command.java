@@ -18,6 +18,8 @@ public class Command {
         MARK,
         /** Marks a task as incomplete. */
         UNMARK,
+        /** Deletes a task. */
+        DELETE,
         /** Adds a basic todo task. */
         TODO,
         /** Adds a task with a deadline. */
@@ -69,7 +71,7 @@ public class Command {
     /**
      * Returns the command description.
      * For TODO/DEADLINE/EVENT commands, this is the task description.
-     * For MARK/UNMARK commands, this is the 1-based task index.
+     * For MARK/UNMARK/DELETE commands, this is the 1-based task index.
      *
      * @return the description or index provided with the command, or {@code null} if absent
      */

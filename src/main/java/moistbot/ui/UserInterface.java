@@ -74,6 +74,17 @@ public final class UserInterface {
     }
 
     /**
+     * Displays a confirmation message when a task is deleted.
+     *
+     * @param task The task that was deleted
+     * @param size The updated total number of tasks in the list
+     */
+    public static void printDeleteTask(Task task, int size) {
+        String header = "Certainly. I have deleted this task:";
+        printMessage(header + "\n" + formatModifyTask(task, size));
+    }
+
+    /**
      * Formats the output for task modification operations.
      * Combines the formatted task details with the updated task count.
      *
@@ -110,7 +121,7 @@ public final class UserInterface {
         int size = TaskManager.getSize();
         if (size == 0) {
             System.out.println("Your task list is presently empty. You may use: bye, list, todo, deadline, event, "
-                    + "mark, or unmark.");
+                    + "mark, unmark, or delete.");
         }
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
