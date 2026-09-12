@@ -1,6 +1,7 @@
 package moistbot.task;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages a shared, dynamically sized list of tasks stored in memory.
@@ -67,6 +68,36 @@ public final class TaskManager {
      */
     public static Task deleteTask(int id) {
         return TASK_LIST.remove(id - 1);
+    }
+
+    /**
+     * Replaces the current task list with tasks restored from storage.
+     *
+     * @param tasks The complete collection of tasks to store
+     */
+    public static void setTasks(List<Task> tasks) {
+        TASK_LIST.clear();
+        TASK_LIST.addAll(tasks);
+    }
+
+    /**
+     * Removes the most recently added task when its persistence operation fails.
+     */
+    public static void removeLastTask() {
+        if (TASK_LIST.isEmpty()) {
+            return;
+        }
+        TASK_LIST.remove(TASK_LIST.size() - 1);
+    }
+
+    /**
+     * Restores a removed task at its original 1-based list position.
+     *
+     * @param id The original 1-based task number
+     * @param task The task to restore
+     */
+    public static void restoreTask(int id, Task task) {
+        TASK_LIST.add(id - 1, task);
     }
 
     /**

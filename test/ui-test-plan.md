@@ -162,9 +162,124 @@ Inputs: the invalid delete sequence in `test/test-ui.ps1` test case 11.
 Expected output: Each invalid command explains the correction and next action.
 The final list still contains the unchanged `read book` task.
 
-## Test case 12: dynamic task-list resizing
+## Test case 12: task changes are saved to disk
 
-Aim: Confirm that the task list grows beyond the former 100-task array limit.
+Aim: Confirm that additions, completion-status changes, and deletions rewrite the saved
+task list using a stable representation. This is verified as the closest
+automated check because saving does not add console output.
+
+Inputs: `todo read book`, `deadline return book /by Friday`,
+`event meeting /from 2pm /to 4pm`, `todo compare A | B`, `mark 2`, `delete 1`,
+`bye`
+
+Expected file at `data/moistbot.txt`:
+
+```text
+D | 1 | return book | Friday
+E | 0 | meeting | 2pm | 4pm
+T | 0 | compare A \| B
+```
+
+Expected console output: The existing successful add, mark, and delete
+confirmations, followed by the shared farewell. Saving produces no additional
+console output.
+
+## Test case 13: saved tasks are loaded at startup
+
+Aim: Confirm that MoistBot restores todo, deadline, and event tasks together
+with their completion states before accepting the first command.
+
+Initial file at `data/moistbot.txt` (with an optional UTF-8 byte-order mark):
+
+```text
+T | 1 | read book
+D | 0 | return book | Friday
+E | 0 | meeting | 2pm | 4pm
+T | 0 | review A \| B \\ notes
+```
+
+Inputs: `list`, `bye`
+
+Expected output:
+
+```text
+Certainly. Here is your task list:
+1.[T][X] read book
+2.[D][ ] return book (by: Friday)
+3.[E][ ] meeting (from: 2pm to: 4pm)
+4.[T][ ] review A | B \ notes
+```
+
+The shared farewell follows. Loading produces no additional console output.
+
+## Test case 14: corrupted saved data is reported safely
+
+Aim: Confirm that corrupted saved data does not crash MoistBot or partially
+populate the task list, and that the user receives an actionable explanation
+identifying the first invalid line.
+
+Initial-file variants:
+
+- Invalid completion flag: `T | maybe | read book`
+- Unknown task type: `X | 0 | read book`
+- Missing field: `D | 0 | return book`
+- Extra field: `T | 0 | read book | extra`
+- Blank required field: `E | 0 | meeting | 2pm | `
+- Blank line between otherwise valid records
+- A valid first record followed by malformed line 2
+- Invalid UTF-8 bytes
+
+Inputs: `list`, `bye`
+
+Expected output:
+
+```text
+My apologies, but line <number> in the save file is invalid. I have started with an empty task list instead. Please add your tasks again; MoistBot will replace the save file when the task list next changes.
+Certainly. Here is your task list:
+Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, unmark, or delete.
+```
+
+For invalid UTF-8, the unreadable-save-file message from test case 16 is
+shown instead. In every variant, the list remains empty and the shared
+farewell follows.
+
+## Test case 15: missing save paths start safely
+
+Aim: Confirm that MoistBot starts with an empty task list when either the
+relative `data` folder or `data/moistbot.txt` does not yet exist.
+
+Setup: Run once without the `data` folder, and once with an empty `data`
+folder but no save file.
+
+Inputs: `list`, `bye`
+
+Expected output: The empty-list response from test case 2, followed by the
+shared farewell. No storage error is shown.
+
+## Test case 16: invalid save-file path is reported safely
+
+Aim: Confirm that an unreadable save-file path does not crash MoistBot and
+that a task addition is rolled back when it cannot be saved.
+
+Setup: Create a directory at the relative `data/moistbot.txt` path.
+
+Inputs: `todo buy milk`, `list`, `bye`
+
+Expected output:
+
+```text
+My apologies, but I could not read your saved task list. Please check that the save file is readable, then restart MoistBot.
+My apologies, but I could not save your task list. Please check that the data folder is writable, then try your command again.
+```
+
+No addition confirmation is shown. The following `list` response remains
+empty, confirming that the unsaved task was rolled back, and MoistBot
+continues to the shared farewell.
+
+## Test case 17: dynamic task-list resizing
+
+Aim: Confirm that the Java collection grows beyond the former 100-task array
+limit and that the expanded list can still be saved.
 
 Inputs: `todo task 1` through `todo task 101`, `list`, `bye`.
 
