@@ -30,10 +30,12 @@ function Run-Case(
         [string]$expected,
         [string]$expectedStorage = $null,
         [string]$initialStorage = $null,
+        [byte[]]$initialStorageBytes = $null,
         [switch]$initialDataDirectory,
         [switch]$initialStorageIsDirectory) {
     $shouldCheckStorage = $PSBoundParameters.ContainsKey('expectedStorage')
     $shouldPrepareStorage = $PSBoundParameters.ContainsKey('initialStorage')
+    $shouldPrepareStorageBytes = $PSBoundParameters.ContainsKey('initialStorageBytes')
     Write-Host "=== Running $name ==="
     Write-Host 'Input:'
     $caseCommands | ForEach-Object { Write-Host $_ }
@@ -57,6 +59,10 @@ function Run-Case(
     if ($shouldPrepareStorage) {
         New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
         [System.IO.File]::WriteAllText($dataFile, $initialStorage, [System.Text.UTF8Encoding]::new($false))
+    }
+    if ($shouldPrepareStorageBytes) {
+        New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+        [System.IO.File]::WriteAllBytes($dataFile, $initialStorageBytes)
     }
     if ($initialStorageIsDirectory) {
         New-Item -ItemType Directory -Path $dataFile -Force | Out-Null
@@ -209,7 +215,7 @@ $cases += @{
     Storage = $storageContents
 }
 
-$loadedStorage = "T | 1 | read book`nD | 0 | return book | Friday" `
+$loadedStorage = [char]0xFEFF + "T | 1 | read book`nD | 0 | return book | Friday" `
         + "`nE | 0 | meeting | 2pm | 4pm`nT | 0 | review A \| B \\ notes"
 $loadedListMessage = "Certainly. Here is your task list:`n1.[T][X] read book" `
         + "`n2.[D][ ] return book (by: Friday)`n3.[E][ ] meeting (from: 2pm to: 4pm)" `
@@ -221,16 +227,40 @@ $cases += @{
     InitialStorage = $loadedStorage
 }
 
-$invalidStorageMessage = 'My apologies, but I could not load your saved tasks because line 1 in the save file ' `
-        + 'is invalid. Please correct or remove the file, then restart MoistBot.'
+$corruptedStorageCases = @(
+    @{ Name = 'invalid completion flag'; Storage = 'T | maybe | read book'; Line = 1 },
+    @{ Name = 'unknown task type'; Storage = 'X | 0 | read book'; Line = 1 },
+    @{ Name = 'missing task field'; Storage = 'D | 0 | return book'; Line = 1 },
+    @{ Name = 'extra task field'; Storage = 'T | 0 | read book | extra'; Line = 1 },
+    @{ Name = 'blank required field'; Storage = 'E | 0 | meeting | 2pm | '; Line = 1 },
+    @{ Name = 'blank record'; Storage = "T | 0 | read book`n `nD | 0 | return book | Friday"; Line = 2 },
+    @{ Name = 'valid record before corruption'; Storage = "T | 0 | read book`nD | broken"; Line = 2 }
+)
+foreach ($corruptedStorageCase in $corruptedStorageCases) {
+    $invalidStorageMessage = 'My apologies, but line ' + $corruptedStorageCase.Line `
+            + ' in the save file is invalid. I have started with an empty task list instead. Please add your ' `
+            + 'tasks again; MoistBot will replace the save file when the task list next changes.'
+    $cases += @{
+        Name = "corrupted save file: $($corruptedStorageCase.Name)"
+        Commands = @('list', 'bye')
+        Messages = @(
+            $invalidStorageMessage,
+            "Certainly. Here is your task list:`n$emptyListMessage",
+            $exitMessage)
+        InitialStorage = $corruptedStorageCase.Storage
+    }
+}
+
+$readErrorMessage = 'My apologies, but I could not read your saved task list. Please check that the save file ' `
+        + 'is readable, then restart MoistBot.'
 $cases += @{
-    Name = 'invalid saved data is reported safely'
+    Name = 'corrupted save file: invalid UTF-8'
     Commands = @('list', 'bye')
     Messages = @(
-        $invalidStorageMessage,
+        $readErrorMessage,
         "Certainly. Here is your task list:`n$emptyListMessage",
         $exitMessage)
-    InitialStorage = 'T | maybe | read book'
+    InitialStorageBytes = [byte[]](0x54, 0x20, 0x7c, 0x20, 0x30, 0x20, 0x7c, 0x20, 0xc3, 0x28)
 }
 
 $missingFileMessages = @(
@@ -243,8 +273,6 @@ $cases += @{
     InitialDataDirectory = $true
 }
 
-$readErrorMessage = 'My apologies, but I could not read your saved task list. Please check that the save file ' `
-        + 'is readable, then restart MoistBot.'
 $saveErrorMessage = 'My apologies, but I could not save your task list. Please check that the data folder is ' `
         + 'writable, then try your command again.'
 $cases += @{
@@ -287,6 +315,9 @@ foreach ($case in $cases) {
     if ($case.ContainsKey('InitialStorage')) {
         Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
                 -initialStorage $case.InitialStorage
+    } elseif ($case.ContainsKey('InitialStorageBytes')) {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
+                -initialStorageBytes $case.InitialStorageBytes
     } elseif ($case.ContainsKey('InitialDataDirectory')) {
         Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
                 -initialDataDirectory

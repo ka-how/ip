@@ -177,7 +177,7 @@ followed by the shared farewell. Saving produces no additional console output.
 Aim: Confirm that MoistBot restores todo, deadline, and event tasks together
 with their completion states before accepting the first command.
 
-Initial file at `data/moistbot.txt`:
+Initial file at `data/moistbot.txt` (with an optional UTF-8 byte-order mark):
 
 ```text
 T | 1 | read book
@@ -200,28 +200,36 @@ Certainly. Here is your task list:
 
 The shared farewell follows. Loading produces no additional console output.
 
-## Test case 13: invalid saved data is reported safely
+## Test case 13: corrupted saved data is reported safely
 
-Aim: Confirm that malformed saved data does not crash MoistBot or partially
-populate the task list, and that the user receives an actionable explanation.
+Aim: Confirm that corrupted saved data does not crash MoistBot or partially
+populate the task list, and that the user receives an actionable explanation
+identifying the first invalid line.
 
-Initial file at `data/moistbot.txt`:
+Initial-file variants:
 
-```text
-T | maybe | read book
-```
+- Invalid completion flag: `T | maybe | read book`
+- Unknown task type: `X | 0 | read book`
+- Missing field: `D | 0 | return book`
+- Extra field: `T | 0 | read book | extra`
+- Blank required field: `E | 0 | meeting | 2pm | `
+- Blank line between otherwise valid records
+- A valid first record followed by malformed line 2
+- Invalid UTF-8 bytes
 
 Inputs: `list`, `bye`
 
 Expected output:
 
 ```text
-My apologies, but I could not load your saved tasks because line 1 in the save file is invalid. Please correct or remove the file, then restart MoistBot.
+My apologies, but line <number> in the save file is invalid. I have started with an empty task list instead. Please add your tasks again; MoistBot will replace the save file when the task list next changes.
 Certainly. Here is your task list:
 Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.
 ```
 
-The shared farewell follows.
+For invalid UTF-8, the unreadable-save-file message from test case 15 is
+shown instead. In every variant, the list remains empty and the shared
+farewell follows.
 
 ## Test case 14: missing save paths start safely
 

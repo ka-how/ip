@@ -50,9 +50,13 @@ public final class Storage {
         List<Task> tasks = new ArrayList<>();
         for (int lineNumber = 1; lineNumber <= taskLines.size(); lineNumber++) {
             String taskLine = taskLines.get(lineNumber - 1);
-            if (!taskLine.isBlank()) {
-                tasks.add(parseTask(taskLine, lineNumber));
+            if (lineNumber == 1 && taskLine.startsWith("\uFEFF")) {
+                taskLine = taskLine.substring(1);
             }
+            if (taskLine.isBlank()) {
+                throw invalidDataException(lineNumber);
+            }
+            tasks.add(parseTask(taskLine, lineNumber));
         }
 
         try {
@@ -174,9 +178,9 @@ public final class Storage {
      * Creates a consistent, actionable error for malformed saved data.
      */
     private static MoistBotException invalidDataException(int lineNumber) {
-        return new MoistBotException("My apologies, but I could not load your saved tasks because line "
-                + lineNumber + " in the save file is invalid. Please correct or remove the file, then "
-                + "restart MoistBot.");
+        return new MoistBotException("My apologies, but line " + lineNumber + " in the save file is invalid. "
+                + "I have started with an empty task list instead. Please add your tasks again; MoistBot will "
+                + "replace the save file when the task list next changes.");
     }
 
     /**
