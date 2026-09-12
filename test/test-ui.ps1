@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $srcDir = Join-Path $projectRoot 'src\main\java'
 $outDir = Join-Path $projectRoot 'out'
+$dataFile = Join-Path $projectRoot 'data\moistbot.txt'
 $divider = '____________________________________________________________'
 $welcome = "$divider`n __  __   ___   ___ ____ _____ ____   ___ _____`n|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|`n| |\/| || | | | | | \___ \ | | |  _ \| | | | | |`n| |  | || |_| | | |  ___) || | | |_) | |_| | | |`n|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_|`nGood day. I am MoistBot, at your service.`nHow may I assist you today?`n$divider"
 $exitMessage = 'Thank you for using MoistBot. Have a pleasant day.'
@@ -21,13 +22,18 @@ function Format-Session([string[]]$messages) {
     return "$welcome`n$divider`n" + ($messages -join "`n$divider`n$divider`n") + "`n$divider"
 }
 
-function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected) {
+function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected, [string]$expectedStorage = $null) {
+    $shouldCheckStorage = $PSBoundParameters.ContainsKey('expectedStorage')
     Write-Host "=== Running $name ==="
     Write-Host 'Input:'
     $caseCommands | ForEach-Object { Write-Host $_ }
 
     if (-not (Test-Path $outDir)) {
         New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+    }
+
+    if ($shouldCheckStorage -and (Test-Path $dataFile)) {
+        Remove-Item -LiteralPath $dataFile
     }
 
     $javaFiles = Get-ChildItem -Path $srcDir -Filter '*.java' -Recurse | Select-Object -ExpandProperty FullName
@@ -53,6 +59,29 @@ function Run-Case([string]$name, [string[]]$caseCommands, [string]$expected) {
         Write-Host 'Actual output:' -ForegroundColor Yellow
         Write-Host $actualText
         exit 1
+    }
+
+    if ($shouldCheckStorage) {
+        if (-not (Test-Path $dataFile)) {
+            Write-Host "FAILED: $name" -ForegroundColor Red
+            Write-Host "Expected storage file was not created: $dataFile" -ForegroundColor Yellow
+            exit 1
+        }
+
+        $actualStorage = Normalize-Output (Get-Content -Raw $dataFile)
+        $expectedStorageText = Normalize-Output $expectedStorage
+        if ($actualStorage -ne $expectedStorageText) {
+            Write-Host "FAILED: $name" -ForegroundColor Red
+            Write-Host 'Expected storage contents:' -ForegroundColor Yellow
+            Write-Host $expectedStorageText
+            Write-Host ''
+            Write-Host 'Actual storage contents:' -ForegroundColor Yellow
+            Write-Host $actualStorage
+            exit 1
+        }
+        Write-Host 'Saved data:'
+        Write-Host $actualStorage
+        Write-Host ''
     }
 
     Write-Host "PASS: $name" -ForegroundColor Green
@@ -131,6 +160,21 @@ $cases = @(
         "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) }
 )
 
+$storageCommands = @(
+    'todo read book', 'deadline return book /by Friday', 'event meeting /from 2pm /to 4pm', 'mark 2', 'bye')
+$storageMessages = @(
+    "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
+    "Certainly. I have added this task:`n[D][ ] return book (by: Friday)`nYour list now contains 2 tasks.",
+    "Certainly. I have added this task:`n[E][ ] meeting (from: 2pm to: 4pm)`nYour list now contains 3 tasks.",
+    "Certainly. I have marked this task as complete:`n[D][X] return book (by: Friday)", $exitMessage)
+$storageContents = "T | 0 | read book`nD | 1 | return book | Friday`nE | 0 | meeting | 2pm | 4pm"
+$cases += @{
+    Name = 'task changes are saved to disk'
+    Commands = $storageCommands
+    Messages = $storageMessages
+    Storage = $storageContents
+}
+
 $capacityCommands = @(1..100 | ForEach-Object { "todo task $_" }) + @('todo overflow task', 'list', 'bye')
 $capacityMessages = @(1..100 | ForEach-Object {
     $taskNoun = if ($_ -eq 1) { 'task' } else { 'tasks' }
@@ -144,7 +188,12 @@ $cases += @{ Name = 'task capacity error preserves the list'; Commands = $capaci
 
 Write-Host "Test plan: $PlanFile"
 foreach ($case in $cases) {
-    Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages)
+    if ($case.ContainsKey('Storage')) {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
+                -expectedStorage $case.Storage
+    } else {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages)
+    }
 }
 
 Write-Host 'All UI checks passed.' -ForegroundColor Green

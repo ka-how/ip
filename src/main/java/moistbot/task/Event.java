@@ -22,6 +22,24 @@ public class Event extends Task {
     }
 
     /**
+     * Returns the event start time in its original user-entered form for persistence.
+     *
+     * @return The event start time
+     */
+    public String getFrom() {
+        return from;
+    }
+
+    /**
+     * Returns the event end time in its original user-entered form for persistence.
+     *
+     * @return The event end time
+     */
+    public String getTo() {
+        return to;
+    }
+
+    /**
      * Returns a string representation of the event task.
      * Appends the time period in the format {@code (from: <start> to: <end>)} to the task description.
      *

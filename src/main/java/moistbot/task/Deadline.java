@@ -19,6 +19,15 @@ public class Deadline extends Task {
     }
 
     /**
+     * Returns the deadline in its original user-entered form for persistence.
+     *
+     * @return The deadline text
+     */
+    public String getDeadline() {
+        return deadline;
+    }
+
+    /**
      * Returns a string representation of the deadline task.
      * Appends the deadline in the format {@code (by: <deadline>)} to the base task description.
      *

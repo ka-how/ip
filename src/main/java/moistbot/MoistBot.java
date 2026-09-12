@@ -3,6 +3,7 @@ package moistbot;
 import moistbot.command.Command;
 import moistbot.command.Parser;
 import moistbot.exception.MoistBotException;
+import moistbot.storage.Storage;
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
 import moistbot.ui.UserInterface;
@@ -120,7 +121,7 @@ public final class MoistBot {
      *
      * @param description The description of the todo task
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
+     * @throws MoistBotException if the task cannot be added or saved
      */
     private static boolean executeTodo(String description) throws MoistBotException {
         return executeAddTask(TaskManager.addTodo(description));
@@ -132,7 +133,7 @@ public final class MoistBot {
      * @param description The description of the deadline task
      * @param by The deadline for the task
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
+     * @throws MoistBotException if the task cannot be added or saved
      */
     private static boolean executeDeadline(String description, String by)
             throws MoistBotException {
@@ -146,7 +147,7 @@ public final class MoistBot {
      * @param from The start time of the event
      * @param to The end time of the event
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
+     * @throws MoistBotException if the task cannot be added or saved
      */
     private static boolean executeEvent(String description, String from, String to)
             throws MoistBotException {
@@ -158,8 +159,10 @@ public final class MoistBot {
      *
      * @param task The added task
      * @return Always returns false to continue execution
+     * @throws MoistBotException if the updated task list cannot be saved
      */
-    private static boolean executeAddTask(Task task) {
+    private static boolean executeAddTask(Task task) throws MoistBotException {
+        Storage.saveTasks();
         UserInterface.printAddTask(task, TaskManager.getSize());
         return false;
     }
@@ -175,6 +178,7 @@ public final class MoistBot {
         int markIndex = Integer.parseInt(description);
         Task task = getExistingTask(markIndex, "mark");
         task.setCompleted(true);
+        Storage.saveTasks();
         UserInterface.printMarkTask(task);
         return false;
     }
@@ -190,6 +194,7 @@ public final class MoistBot {
         int unmarkIndex = Integer.parseInt(description);
         Task task = getExistingTask(unmarkIndex, "unmark");
         task.setCompleted(false);
+        Storage.saveTasks();
         UserInterface.printUnmarkTask(task);
         return false;
     }

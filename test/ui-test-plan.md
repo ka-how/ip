@@ -150,3 +150,23 @@ My apologies, but your task list is full (maximum 100 tasks). No task has been a
 ```
 
 The final list contains tasks 1 through 100 only.
+
+## Test case 11: task changes are saved to disk
+
+Aim: Confirm that additions and completion-status changes rewrite the saved
+task list using a stable representation. This is verified as the closest
+automated check because saving does not add console output.
+
+Inputs: `todo read book`, `deadline return book /by Friday`,
+`event meeting /from 2pm /to 4pm`, `mark 2`, `bye`
+
+Expected file at `data/moistbot.txt`:
+
+```text
+T | 0 | read book
+D | 1 | return book | Friday
+E | 0 | meeting | 2pm | 4pm
+```
+
+Expected console output: The existing successful add and mark confirmations,
+followed by the shared farewell. Saving produces no additional console output.
