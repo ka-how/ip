@@ -1,17 +1,13 @@
 package moistbot.task;
 
-import moistbot.exception.MoistBotException;
+import java.util.ArrayList;
 
 /**
- * Manages a static list of tasks stored in memory.
- * Provides functionality to add tasks of various types (todo, deadline, event)
- * and retrieve tasks by index.
- * The list can store up to 100 tasks using a fixed-size array.
+ * Manages a shared, dynamically sized list of tasks stored in memory.
+ * Provides functionality to add, retrieve, and delete tasks.
  */
 public final class TaskManager {
-    private static final int MAX_TASKS = 100;
-    private static final Task[] TASK_ARRAY = new Task[MAX_TASKS];
-    private static int size = 0;
+    private static final ArrayList<Task> TASK_LIST = new ArrayList<>();
 
     /**
      * Prevents instantiation because the application uses one shared in-memory task list.
@@ -24,9 +20,8 @@ public final class TaskManager {
      *
      * @param description The description of the todo task
      * @return The task that was added
-     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addTodo(String description) throws MoistBotException {
+    public static Task addTodo(String description) {
         return addTask(new Todo(description));
     }
 
@@ -36,9 +31,8 @@ public final class TaskManager {
      * @param description The description of the deadline task
      * @param by The deadline for the task
      * @return The task that was added
-     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addDeadline(String description, String by) throws MoistBotException {
+    public static Task addDeadline(String description, String by) {
         return addTask(new Deadline(description, by));
     }
 
@@ -49,27 +43,30 @@ public final class TaskManager {
      * @param from The start time of the event
      * @param to The end time of the event
      * @return The task that was added
-     * @throws MoistBotException if the task list is at maximum capacity (100 tasks)
      */
-    public static Task addEvent(String description, String from, String to) throws MoistBotException {
+    public static Task addEvent(String description, String from, String to) {
         return addTask(new Event(description, from, to));
     }
 
     /**
-     * Stores a task after ensuring that the fixed-size task list has capacity.
+     * Stores a task in the dynamically sized task list.
      *
      * @param task The task to store
      * @return The task that was stored
-     * @throws MoistBotException if the task list is at maximum capacity
      */
-    private static Task addTask(Task task) throws MoistBotException {
-        if (size == MAX_TASKS) {
-            throw new MoistBotException("My apologies, but your task list is full (maximum 100 tasks). No task "
-                    + "has been added.");
-        }
-        TASK_ARRAY[size] = task;
-        size++;
+    private static Task addTask(Task task) {
+        TASK_LIST.add(task);
         return task;
+    }
+
+    /**
+     * Deletes and returns a task using its 1-based list number.
+     *
+     * @param id The 1-based task number
+     * @return The task removed from the list
+     */
+    public static Task deleteTask(int id) {
+        return TASK_LIST.remove(id - 1);
     }
 
     /**
@@ -80,10 +77,10 @@ public final class TaskManager {
      * @return The task at the given index, or null if the index is out of bounds
      */
     public static Task getTask(int id) {
-        if (id < 1 || id > size) {
+        if (id < 1 || id > TASK_LIST.size()) {
             return null;
         }
-        return TASK_ARRAY[id - 1];
+        return TASK_LIST.get(id - 1);
     }
 
     /**
@@ -92,6 +89,6 @@ public final class TaskManager {
      * @return The count of tasks stored in the list
      */
     public static int getSize() {
-        return size;
+        return TASK_LIST.size();
     }
 }

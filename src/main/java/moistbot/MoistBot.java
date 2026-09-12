@@ -11,7 +11,7 @@ import java.util.Scanner;
 
 /**
  * MoistBot is a simple console-based task tracker application that teaches Java fundamentals.
- * The application accepts commands such as adding, listing, marking, and unmarking tasks.
+ * The application accepts commands such as adding, listing, marking, unmarking, and deleting tasks.
  * Parsing and command handling are separated into helper classes (Parser, Command, TaskManager)
  * for clarity, maintainability, and easier testing.
  */
@@ -66,7 +66,7 @@ public final class MoistBot {
 
     /**
      * Executes a parsed command and prints the corresponding user feedback.
-     * Handles all command types: BYE, LIST, MARK, UNMARK, TODO, DEADLINE, and EVENT.
+     * Handles all supported task and application commands.
      * Task operations delegate to TaskManager for manipulation and to UserInterface for display.
      *
      * @param command The parsed command object to execute
@@ -90,6 +90,8 @@ public final class MoistBot {
                 return executeMark(command.getDescription());
             case UNMARK:
                 return executeUnmark(command.getDescription());
+            case DELETE:
+                return executeDelete(command.getDescription());
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
@@ -120,9 +122,8 @@ public final class MoistBot {
      *
      * @param description The description of the todo task
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeTodo(String description) throws MoistBotException {
+    private static boolean executeTodo(String description) {
         return executeAddTask(TaskManager.addTodo(description));
     }
 
@@ -132,10 +133,8 @@ public final class MoistBot {
      * @param description The description of the deadline task
      * @param by The deadline for the task
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeDeadline(String description, String by)
-            throws MoistBotException {
+    private static boolean executeDeadline(String description, String by) {
         return executeAddTask(TaskManager.addDeadline(description, by));
     }
 
@@ -146,10 +145,8 @@ public final class MoistBot {
      * @param from The start time of the event
      * @param to The end time of the event
      * @return Always returns false to continue execution
-     * @throws MoistBotException if the task list has reached capacity
      */
-    private static boolean executeEvent(String description, String from, String to)
-            throws MoistBotException {
+    private static boolean executeEvent(String description, String from, String to) {
         return executeAddTask(TaskManager.addEvent(description, from, to));
     }
 
@@ -191,6 +188,21 @@ public final class MoistBot {
         Task task = getExistingTask(unmarkIndex, "unmark");
         task.setCompleted(false);
         UserInterface.printUnmarkTask(task);
+        return false;
+    }
+
+    /**
+     * Executes the delete command and removes the selected task.
+     *
+     * @param description The 1-based index of the task to delete
+     * @return Always returns false to continue execution
+     * @throws MoistBotException if the task index is invalid
+     */
+    private static boolean executeDelete(String description) throws MoistBotException {
+        int deleteIndex = Integer.parseInt(description);
+        Task deletedTask = getExistingTask(deleteIndex, "delete");
+        TaskManager.deleteTask(deleteIndex);
+        UserInterface.printDeleteTask(deletedTask, TaskManager.getSize());
         return false;
     }
 

@@ -11,7 +11,7 @@ $outDir = Join-Path $projectRoot 'out'
 $divider = '____________________________________________________________'
 $welcome = "$divider`n __  __   ___   ___ ____ _____ ____   ___ _____`n|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|`n| |\/| || | | | | | \___ \ | | |  _ \| | | | | |`n| |  | || |_| | | |  ___) || | | |_) | |_| | | |`n|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_|`nGood day. I am MoistBot, at your service.`nHow may I assist you today?`n$divider"
 $exitMessage = 'Thank you for using MoistBot. Have a pleasant day.'
-$emptyListMessage = 'Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.'
+$emptyListMessage = 'Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, unmark, or delete.'
 
 function Normalize-Output([string]$value) {
     return ($value -replace "`r`n", "`n" -replace "`r", "`n").TrimEnd()
@@ -84,7 +84,7 @@ $cases = @(
         "Certainly. Here is your task list:`n1.[T][ ] read book`n2.[D][X] return book (by: Friday)`n3.[E][ ] team meeting (from: 2pm to: 4pm)",
         "Certainly. I have marked this task as incomplete:`n[D][ ] return book (by: Friday)", $exitMessage) },
     @{ Name = 'unrecognised command'; Commands = @('buy groceries today', 'list', 'bye'); Messages = @(
-        "My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, and unmark.",
+        "My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.",
         "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) },
     @{ Name = 'malformed additions explain the required correction'; Commands = @(
         'todo', 'deadline', 'deadline pay bills', 'deadline /by Friday', 'deadline pay bills /by',
@@ -128,19 +128,37 @@ $cases = @(
     @{ Name = 'argument-free commands reject extra text'; Commands = @('list now', 'bye now', 'list', 'bye'); Messages = @(
         "The 'list' command does not accept arguments. Please enter only 'list'.",
         "The 'bye' command does not accept arguments. Please enter only 'bye'.",
-        "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) }
+        "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) },
+    @{ Name = 'delete removes a task and renumbers the list'; Commands = @(
+        'todo first task', 'todo second task', 'todo third task', 'delete 2', 'list', 'bye'); Messages = @(
+        "Certainly. I have added this task:`n[T][ ] first task`nYour list now contains 1 task.",
+        "Certainly. I have added this task:`n[T][ ] second task`nYour list now contains 2 tasks.",
+        "Certainly. I have added this task:`n[T][ ] third task`nYour list now contains 3 tasks.",
+        "Certainly. I have deleted this task:`n[T][ ] second task`nYour list now contains 2 tasks.",
+        "Certainly. Here is your task list:`n1.[T][ ] first task`n2.[T][ ] third task", $exitMessage) },
+    @{ Name = 'invalid delete preserves the task list'; Commands = @(
+        'delete 1', 'todo read book', 'delete', 'delete one', 'delete 2147483648', 'delete 0',
+        'delete 2', 'delete 1 extra', 'list', 'bye'); Messages = @(
+        "My apologies, but I cannot delete a task because your task list is empty. Please add a task first, then use 'delete <task number>'.",
+        "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
+        "Please provide a task number. Usage: delete <task number>, for example 'delete 1'.",
+        "My apologies, but 'one' is not a valid task number. Please enter one whole number, for example 'delete 1'.",
+        "My apologies, but '2147483648' is not a valid task number. Please enter one whole number, for example 'delete 1'.",
+        "Please provide a task number of at least 1. Use 'list' to view the available task numbers.",
+        "My apologies, but task 2 does not exist. Please choose a number from 1 to 1. Use 'list' to view the tasks.",
+        "My apologies, but '1 extra' is not a valid task number. Please enter one whole number, for example 'delete 1'.",
+        "Certainly. Here is your task list:`n1.[T][ ] read book", $exitMessage) }
 )
 
-$capacityCommands = @(1..100 | ForEach-Object { "todo task $_" }) + @('todo overflow task', 'list', 'bye')
-$capacityMessages = @(1..100 | ForEach-Object {
+$resizingCommands = @(1..101 | ForEach-Object { "todo task $_" }) + @('list', 'bye')
+$resizingMessages = @(1..101 | ForEach-Object {
     $taskNoun = if ($_ -eq 1) { 'task' } else { 'tasks' }
     "Certainly. I have added this task:`n[T][ ] task $_`nYour list now contains $_ $taskNoun."
 })
-$capacityMessages += 'My apologies, but your task list is full (maximum 100 tasks). No task has been added.'
-$capacityList = @(1..100 | ForEach-Object { "$_.[T][ ] task $_" }) -join "`n"
-$capacityMessages += "Certainly. Here is your task list:`n$capacityList"
-$capacityMessages += $exitMessage
-$cases += @{ Name = 'task capacity error preserves the list'; Commands = $capacityCommands; Messages = $capacityMessages }
+$resizedList = @(1..101 | ForEach-Object { "$_.[T][ ] task $_" }) -join "`n"
+$resizingMessages += "Certainly. Here is your task list:`n$resizedList"
+$resizingMessages += $exitMessage
+$cases += @{ Name = 'task list resizes beyond 100 items'; Commands = $resizingCommands; Messages = $resizingMessages }
 
 Write-Host "Test plan: $PlanFile"
 foreach ($case in $cases) {

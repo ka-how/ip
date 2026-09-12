@@ -15,7 +15,7 @@ public final class Parser {
     private static final String EVENT_TO_SEPARATOR = "/to";
     private static final String INPUT_ERROR = "Please enter a command, such as 'list' or 'todo buy milk'.";
     private static final String UNKNOWN_COMMAND = "My apologies, but I do not recognise the command '%s'. "
-            + "Available commands are: bye, list, todo, deadline, event, mark, and unmark.";
+            + "Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.";
 
     /**
      * Prevents instantiation because parsing operations do not require object state.
@@ -25,7 +25,7 @@ public final class Parser {
 
     /**
      * Parses a user-entered line into a command object.
-     * Recognizes command keywords (bye, list, mark, unmark, todo, deadline, event)
+     * Recognizes command keywords (bye, list, mark, unmark, delete, todo, deadline, event)
      * and delegates to specialized parsing methods for complex commands.
      *
      * @param inputString The raw text entered by the user
@@ -76,9 +76,11 @@ public final class Parser {
             case "list":
                 return parseCommandWithoutArguments(Command.CommandType.LIST, inputArray);
             case "mark":
-                return parseMarkOrUnmark(Command.CommandType.MARK, inputArray);
+                return parseTaskNumber(Command.CommandType.MARK, inputArray);
             case "unmark":
-                return parseMarkOrUnmark(Command.CommandType.UNMARK, inputArray);
+                return parseTaskNumber(Command.CommandType.UNMARK, inputArray);
+            case "delete":
+                return parseTaskNumber(Command.CommandType.DELETE, inputArray);
             case "todo":
                 return parseTodo(inputArray);
             case "deadline":
@@ -109,14 +111,14 @@ public final class Parser {
     }
 
     /**
-     * Parses mark or unmark commands that require an integer argument.
+     * Parses task commands that require an integer task number.
      *
-     * @param commandType The command type (MARK or UNMARK)
+     * @param commandType The command type (MARK, UNMARK, or DELETE)
      * @param inputArray The array containing the command and its arguments
-     * @return A parsed MARK or UNMARK command
+     * @return A parsed command containing a task number
      * @throws MoistBotException if the argument is missing or not an integer
      */
-    private static Command parseMarkOrUnmark(Command.CommandType commandType, String[] inputArray)
+    private static Command parseTaskNumber(Command.CommandType commandType, String[] inputArray)
             throws MoistBotException {
         String commandName = commandType.name().toLowerCase();
         if (inputArray.length < 2) {

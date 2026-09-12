@@ -37,7 +37,7 @@ Expected output:
 
 ```text
 Certainly. Here is your task list:
-Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.
+Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, unmark, or delete.
 ```
 
 ## Test case 3: add todo and list
@@ -77,7 +77,7 @@ Inputs: `buy groceries today`, `list`, `bye`
 Expected output:
 
 ```text
-My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, and unmark.
+My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.
 ```
 
 The following list remains empty as in test case 2.
@@ -133,20 +133,40 @@ The 'bye' command does not accept arguments. Please enter only 'bye'.
 
 The app then prints the empty list and continues to the farewell.
 
-## Test case 10: task capacity
+## Test case 10: delete a task
 
-Aim: Confirm that the 101st task is declined politely and the first 100 tasks
-remain intact.
+Aim: Confirm that deleting task 2 removes the correct task, reports the deleted
+task and updated count, and renumbers the remaining tasks.
 
-Inputs: `todo task 1` through `todo task 100`, `todo overflow task`, `list`,
-`bye`.
+Inputs: `todo first task`, `todo second task`, `todo third task`, `delete 2`,
+`list`, `bye`.
 
-Expected output: Each successful addition says “Certainly. I have added this
-task:” and reports the grammatically correct singular or plural count. The
-overflow response is:
+Expected output:
 
 ```text
-My apologies, but your task list is full (maximum 100 tasks). No task has been added.
+Certainly. I have deleted this task:
+[T][ ] second task
+Your list now contains 2 tasks.
+Certainly. Here is your task list:
+1.[T][ ] first task
+2.[T][ ] third task
 ```
 
-The final list contains tasks 1 through 100 only.
+## Test case 11: invalid delete
+
+Aim: Confirm that missing, non-numeric, zero, out-of-range, overflowed, and
+malformed delete numbers are explained politely without changing the list.
+
+Inputs: the invalid delete sequence in `test/test-ui.ps1` test case 11.
+
+Expected output: Each invalid command explains the correction and next action.
+The final list still contains the unchanged `read book` task.
+
+## Test case 12: dynamic task-list resizing
+
+Aim: Confirm that the task list grows beyond the former 100-task array limit.
+
+Inputs: `todo task 1` through `todo task 101`, `list`, `bye`.
+
+Expected output: All 101 additions succeed and report the updated count. The
+final list contains tasks 1 through 101 with no capacity error.
