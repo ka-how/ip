@@ -9,9 +9,11 @@ import moistbot.task.Todo;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,7 @@ import java.util.List;
  * Loads and saves MoistBot tasks using a text file on the local disk.
  */
 public final class Storage {
+    private static final String FIELD_SEPARATOR = " | ";
     private static final Path DATA_FILE = Path.of("data", "moistbot.txt");
 
     /**
@@ -34,16 +37,14 @@ public final class Storage {
      * @throws MoistBotException if the file cannot be read or contains invalid task data
      */
     public static void loadTasks() throws MoistBotException {
-        if (!Files.exists(DATA_FILE)) {
-            return;
-        }
-
         List<String> taskLines;
         try {
             taskLines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
-        } catch (IOException e) {
+        } catch (NoSuchFileException e) {
+            return;
+        } catch (IOException | SecurityException e) {
             throw new MoistBotException("My apologies, but I could not read your saved task list. Please check "
-                    + "that data/moistbot.txt is readable, then restart MoistBot.");
+                    + "that the save file is readable, then restart MoistBot.");
         }
 
         List<Task> tasks = new ArrayList<>();
@@ -54,8 +55,11 @@ public final class Storage {
             }
         }
 
-        for (Task task : tasks) {
-            addLoadedTask(task);
+        try {
+            TaskManager.setTasks(tasks);
+        } catch (MoistBotException e) {
+            throw new MoistBotException("My apologies, but the save file contains more tasks than MoistBot can "
+                    + "hold. Please reduce the number of saved tasks, then restart MoistBot.");
         }
     }
 
@@ -70,31 +74,50 @@ public final class Storage {
             taskLines.add(formatTask(TaskManager.getTask(taskNumber)));
         }
 
+        Path dataDirectory = DATA_FILE.getParent();
+        Path temporaryFile = null;
         try {
-            Files.createDirectories(DATA_FILE.getParent());
-            Files.write(DATA_FILE, taskLines, StandardCharsets.UTF_8,
-                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } catch (IOException e) {
+            Files.createDirectories(dataDirectory);
+            temporaryFile = Files.createTempFile(dataDirectory, "moistbot-", ".tmp");
+            Files.write(temporaryFile, taskLines, StandardCharsets.UTF_8);
+            replaceDataFile(temporaryFile);
+            temporaryFile = null;
+        } catch (IOException | SecurityException e) {
             throw new MoistBotException("My apologies, but I could not save your task list. Please check that "
                     + "the data folder is writable, then try your command again.");
+        } finally {
+            deleteTemporaryFile(temporaryFile);
         }
     }
 
     /**
      * Converts a task to a stable, pipe-separated representation for future loading.
      */
-    private static String formatTask(Task task) {
+    private static String formatTask(Task task) throws MoistBotException {
+        if (task == null) {
+            throw unsupportedTaskException();
+        }
+
         String completionStatus = task.isCompleted() ? "1" : "0";
-        String commonFields = task.getTaskType() + " | " + completionStatus + " | " + task.getDescription();
+        String commonFields = task.getTaskType() + FIELD_SEPARATOR + completionStatus + FIELD_SEPARATOR
+                + escapeField(task.getDescription());
 
         switch (task.getTaskType()) {
             case Task.TYPE_DEADLINE:
-                return commonFields + " | " + ((Deadline) task).getDeadline();
+                if (!(task instanceof Deadline deadline)) {
+                    throw unsupportedTaskException();
+                }
+                return commonFields + FIELD_SEPARATOR + escapeField(deadline.getDeadline());
             case Task.TYPE_EVENT:
-                Event event = (Event) task;
-                return commonFields + " | " + event.getFrom() + " | " + event.getTo();
-            default:
+                if (!(task instanceof Event event)) {
+                    throw unsupportedTaskException();
+                }
+                return commonFields + FIELD_SEPARATOR + escapeField(event.getFrom())
+                        + FIELD_SEPARATOR + escapeField(event.getTo());
+            case Task.TYPE_TODO:
                 return commonFields;
+            default:
+                throw unsupportedTaskException();
         }
     }
 
@@ -102,7 +125,7 @@ public final class Storage {
      * Reconstructs one task while rejecting data that cannot be interpreted safely.
      */
     private static Task parseTask(String taskLine, int lineNumber) throws MoistBotException {
-        String[] fields = taskLine.split("\\s*\\|\\s*", -1);
+        String[] fields = splitFields(taskLine);
         if (fields.length < 3) {
             throw invalidDataException(lineNumber);
         }
@@ -148,31 +171,84 @@ public final class Storage {
     }
 
     /**
-     * Adds a restored task through TaskManager so storage remains independent of its collection implementation.
-     */
-    private static void addLoadedTask(Task task) throws MoistBotException {
-        Task addedTask;
-        switch (task.getTaskType()) {
-            case Task.TYPE_DEADLINE:
-                addedTask = TaskManager.addDeadline(task.getDescription(), ((Deadline) task).getDeadline());
-                break;
-            case Task.TYPE_EVENT:
-                Event event = (Event) task;
-                addedTask = TaskManager.addEvent(task.getDescription(), event.getFrom(), event.getTo());
-                break;
-            default:
-                addedTask = TaskManager.addTodo(task.getDescription());
-                break;
-        }
-        addedTask.setCompleted(task.isCompleted());
-    }
-
-    /**
      * Creates a consistent, actionable error for malformed saved data.
      */
     private static MoistBotException invalidDataException(int lineNumber) {
         return new MoistBotException("My apologies, but I could not load your saved tasks because line "
-                + lineNumber + " in data/moistbot.txt is invalid. Please correct or remove the file, then "
+                + lineNumber + " in the save file is invalid. Please correct or remove the file, then "
                 + "restart MoistBot.");
+    }
+
+    /**
+     * Escapes characters that otherwise have structural meaning in the storage format.
+     */
+    private static String escapeField(String field) throws MoistBotException {
+        if (field == null || field.isBlank()) {
+            throw unsupportedTaskException();
+        }
+        return field.replace("\\", "\\\\").replace("|", "\\|");
+    }
+
+    /**
+     * Splits fields at unescaped pipe characters and restores escaped field content.
+     */
+    private static String[] splitFields(String taskLine) {
+        List<String> fields = new ArrayList<>();
+        StringBuilder currentField = new StringBuilder();
+
+        for (int characterIndex = 0; characterIndex < taskLine.length(); characterIndex++) {
+            char currentCharacter = taskLine.charAt(characterIndex);
+            if (currentCharacter == '\\' && characterIndex + 1 < taskLine.length()) {
+                char nextCharacter = taskLine.charAt(characterIndex + 1);
+                if (nextCharacter == '\\' || nextCharacter == '|') {
+                    currentField.append(nextCharacter);
+                    characterIndex++;
+                    continue;
+                }
+            }
+            if (currentCharacter == '|') {
+                fields.add(currentField.toString().trim());
+                currentField.setLength(0);
+            } else {
+                currentField.append(currentCharacter);
+            }
+        }
+
+        fields.add(currentField.toString().trim());
+        return fields.toArray(String[]::new);
+    }
+
+    /**
+     * Replaces the save file atomically when supported by the host file system.
+     */
+    private static void replaceDataFile(Path temporaryFile) throws IOException {
+        try {
+            Files.move(temporaryFile, DATA_FILE, StandardCopyOption.ATOMIC_MOVE,
+                    StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(temporaryFile, DATA_FILE, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    /**
+     * Removes a leftover temporary file without masking the original save error.
+     */
+    private static void deleteTemporaryFile(Path temporaryFile) {
+        if (temporaryFile == null) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(temporaryFile);
+        } catch (IOException | SecurityException e) {
+            // The actionable save error has already been reported; cleanup must not replace it.
+        }
+    }
+
+    /**
+     * Creates a courteous error when an in-memory task cannot be represented safely.
+     */
+    private static MoistBotException unsupportedTaskException() {
+        return new MoistBotException("My apologies, but the task list contains unsupported data and could not be "
+                + "saved. Please restart MoistBot and try again.");
     }
 }

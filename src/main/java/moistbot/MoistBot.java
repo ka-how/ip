@@ -174,7 +174,12 @@ public final class MoistBot {
      * @throws MoistBotException if the updated task list cannot be saved
      */
     private static boolean executeAddTask(Task task) throws MoistBotException {
-        Storage.saveTasks();
+        try {
+            Storage.saveTasks();
+        } catch (MoistBotException e) {
+            TaskManager.removeLastTask();
+            throw e;
+        }
         UserInterface.printAddTask(task, TaskManager.getSize());
         return false;
     }
@@ -189,8 +194,9 @@ public final class MoistBot {
     private static boolean executeMark(String description) throws MoistBotException {
         int markIndex = Integer.parseInt(description);
         Task task = getExistingTask(markIndex, "mark");
+        boolean wasCompleted = task.isCompleted();
         task.setCompleted(true);
-        Storage.saveTasks();
+        saveCompletionChange(task, wasCompleted);
         UserInterface.printMarkTask(task);
         return false;
     }
@@ -205,10 +211,23 @@ public final class MoistBot {
     private static boolean executeUnmark(String description) throws MoistBotException {
         int unmarkIndex = Integer.parseInt(description);
         Task task = getExistingTask(unmarkIndex, "unmark");
+        boolean wasCompleted = task.isCompleted();
         task.setCompleted(false);
-        Storage.saveTasks();
+        saveCompletionChange(task, wasCompleted);
         UserInterface.printUnmarkTask(task);
         return false;
+    }
+
+    /**
+     * Saves a completion-state change and restores the previous state if persistence fails.
+     */
+    private static void saveCompletionChange(Task task, boolean wasCompleted) throws MoistBotException {
+        try {
+            Storage.saveTasks();
+        } catch (MoistBotException e) {
+            task.setCompleted(wasCompleted);
+            throw e;
+        }
     }
 
     /**

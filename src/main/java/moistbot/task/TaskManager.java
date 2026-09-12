@@ -2,6 +2,8 @@ package moistbot.task;
 
 import moistbot.exception.MoistBotException;
 
+import java.util.List;
+
 /**
  * Manages a static list of tasks stored in memory.
  * Provides functionality to add tasks of various types (todo, deadline, event)
@@ -70,6 +72,39 @@ public final class TaskManager {
         TASK_ARRAY[size] = task;
         size++;
         return task;
+    }
+
+    /**
+     * Replaces the current task list only after confirming that every supplied task fits.
+     *
+     * @param tasks The complete collection of tasks to store
+     * @throws MoistBotException if the supplied collection exceeds the task capacity
+     */
+    public static void setTasks(List<Task> tasks) throws MoistBotException {
+        if (tasks.size() > MAX_TASKS) {
+            throw new MoistBotException("My apologies, but your task list is full (maximum 100 tasks). No tasks "
+                    + "have been loaded.");
+        }
+
+        for (int taskIndex = 0; taskIndex < size; taskIndex++) {
+            TASK_ARRAY[taskIndex] = null;
+        }
+        size = 0;
+        for (Task task : tasks) {
+            TASK_ARRAY[size] = task;
+            size++;
+        }
+    }
+
+    /**
+     * Removes the most recently added task when its persistence operation fails.
+     */
+    public static void removeLastTask() {
+        if (size == 0) {
+            return;
+        }
+        size--;
+        TASK_ARRAY[size] = null;
     }
 
     /**

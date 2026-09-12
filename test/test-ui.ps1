@@ -9,7 +9,8 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $srcDir = Join-Path $projectRoot 'src\main\java'
 $outDir = Join-Path $projectRoot 'out'
 $testWorkDir = Join-Path $projectRoot '_temp\ui-test'
-$dataFile = Join-Path $testWorkDir 'data\moistbot.txt'
+$dataDir = Join-Path $testWorkDir 'data'
+$dataFile = Join-Path $dataDir 'moistbot.txt'
 $divider = '____________________________________________________________'
 $welcome = "$divider`n __  __   ___   ___ ____ _____ ____   ___ _____`n|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|`n| |\/| || | | | | | \___ \ | | |  _ \| | | | | |`n| |  | || |_| | | |  ___) || | | |_) | |_| | | |`n|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_|`nGood day. I am MoistBot, at your service.`nHow may I assist you today?`n$divider"
 $exitMessage = 'Thank you for using MoistBot. Have a pleasant day.'
@@ -28,7 +29,9 @@ function Run-Case(
         [string[]]$caseCommands,
         [string]$expected,
         [string]$expectedStorage = $null,
-        [string]$initialStorage = $null) {
+        [string]$initialStorage = $null,
+        [switch]$initialDataDirectory,
+        [switch]$initialStorageIsDirectory) {
     $shouldCheckStorage = $PSBoundParameters.ContainsKey('expectedStorage')
     $shouldPrepareStorage = $PSBoundParameters.ContainsKey('initialStorage')
     Write-Host "=== Running $name ==="
@@ -45,10 +48,18 @@ function Run-Case(
     if (Test-Path $dataFile) {
         Remove-Item -LiteralPath $dataFile
     }
+    if ((Test-Path $dataDir) -and @(Get-ChildItem -LiteralPath $dataDir).Count -eq 0) {
+        Remove-Item -LiteralPath $dataDir
+    }
+    if ($initialDataDirectory) {
+        New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
+    }
     if ($shouldPrepareStorage) {
-        $dataDir = Split-Path -Parent $dataFile
         New-Item -ItemType Directory -Path $dataDir -Force | Out-Null
         [System.IO.File]::WriteAllText($dataFile, $initialStorage, [System.Text.UTF8Encoding]::new($false))
+    }
+    if ($initialStorageIsDirectory) {
+        New-Item -ItemType Directory -Path $dataFile -Force | Out-Null
     }
 
     $javaFiles = Get-ChildItem -Path $srcDir -Filter '*.java' -Recurse | Select-Object -ExpandProperty FullName
@@ -181,13 +192,16 @@ $cases = @(
 )
 
 $storageCommands = @(
-    'todo read book', 'deadline return book /by Friday', 'event meeting /from 2pm /to 4pm', 'mark 2', 'bye')
+    'todo read book', 'deadline return book /by Friday', 'event meeting /from 2pm /to 4pm',
+    'todo compare A | B', 'mark 2', 'bye')
 $storageMessages = @(
     "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
     "Certainly. I have added this task:`n[D][ ] return book (by: Friday)`nYour list now contains 2 tasks.",
     "Certainly. I have added this task:`n[E][ ] meeting (from: 2pm to: 4pm)`nYour list now contains 3 tasks.",
+    "Certainly. I have added this task:`n[T][ ] compare A | B`nYour list now contains 4 tasks.",
     "Certainly. I have marked this task as complete:`n[D][X] return book (by: Friday)", $exitMessage)
-$storageContents = "T | 0 | read book`nD | 1 | return book | Friday`nE | 0 | meeting | 2pm | 4pm"
+$storageContents = "T | 0 | read book`nD | 1 | return book | Friday" `
+        + "`nE | 0 | meeting | 2pm | 4pm`nT | 0 | compare A \| B"
 $cases += @{
     Name = 'task changes are saved to disk'
     Commands = $storageCommands
@@ -195,9 +209,11 @@ $cases += @{
     Storage = $storageContents
 }
 
-$loadedStorage = "T | 1 | read book`nD | 0 | return book | Friday`nE | 0 | meeting | 2pm | 4pm"
+$loadedStorage = "T | 1 | read book`nD | 0 | return book | Friday" `
+        + "`nE | 0 | meeting | 2pm | 4pm`nT | 0 | review A \| B \\ notes"
 $loadedListMessage = "Certainly. Here is your task list:`n1.[T][X] read book" `
-        + "`n2.[D][ ] return book (by: Friday)`n3.[E][ ] meeting (from: 2pm to: 4pm)"
+        + "`n2.[D][ ] return book (by: Friday)`n3.[E][ ] meeting (from: 2pm to: 4pm)" `
+        + "`n4.[T][ ] review A | B \ notes"
 $cases += @{
     Name = 'saved tasks are loaded at startup'
     Commands = @('list', 'bye')
@@ -205,8 +221,8 @@ $cases += @{
     InitialStorage = $loadedStorage
 }
 
-$invalidStorageMessage = 'My apologies, but I could not load your saved tasks because line 1 in ' `
-        + 'data/moistbot.txt is invalid. Please correct or remove the file, then restart MoistBot.'
+$invalidStorageMessage = 'My apologies, but I could not load your saved tasks because line 1 in the save file ' `
+        + 'is invalid. Please correct or remove the file, then restart MoistBot.'
 $cases += @{
     Name = 'invalid saved data is reported safely'
     Commands = @('list', 'bye')
@@ -215,6 +231,44 @@ $cases += @{
         "Certainly. Here is your task list:`n$emptyListMessage",
         $exitMessage)
     InitialStorage = 'T | maybe | read book'
+}
+
+$missingFileMessages = @(
+    "Certainly. Here is your task list:`n$emptyListMessage",
+    $exitMessage)
+$cases += @{
+    Name = 'missing save file in an existing folder starts empty'
+    Commands = @('list', 'bye')
+    Messages = $missingFileMessages
+    InitialDataDirectory = $true
+}
+
+$readErrorMessage = 'My apologies, but I could not read your saved task list. Please check that the save file ' `
+        + 'is readable, then restart MoistBot.'
+$saveErrorMessage = 'My apologies, but I could not save your task list. Please check that the data folder is ' `
+        + 'writable, then try your command again.'
+$cases += @{
+    Name = 'invalid save file path is reported safely'
+    Commands = @('todo buy milk', 'list', 'bye')
+    Messages = @(
+        $readErrorMessage,
+        $saveErrorMessage,
+        "Certainly. Here is your task list:`n$emptyListMessage",
+        $exitMessage)
+    InitialStorageIsDirectory = $true
+}
+
+$excessTaskStorage = @(1..101 | ForEach-Object { "T | 0 | task $_" }) -join "`n"
+$excessTaskMessage = 'My apologies, but the save file contains more tasks than MoistBot can hold. Please reduce ' `
+        + 'the number of saved tasks, then restart MoistBot.'
+$cases += @{
+    Name = 'oversized saved list is rejected atomically'
+    Commands = @('list', 'bye')
+    Messages = @(
+        $excessTaskMessage,
+        "Certainly. Here is your task list:`n$emptyListMessage",
+        $exitMessage)
+    InitialStorage = $excessTaskStorage
 }
 
 $capacityCommands = @(1..100 | ForEach-Object { "todo task $_" }) + @('todo overflow task', 'list', 'bye')
@@ -233,6 +287,12 @@ foreach ($case in $cases) {
     if ($case.ContainsKey('InitialStorage')) {
         Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
                 -initialStorage $case.InitialStorage
+    } elseif ($case.ContainsKey('InitialDataDirectory')) {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
+                -initialDataDirectory
+    } elseif ($case.ContainsKey('InitialStorageIsDirectory')) {
+        Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
+                -initialStorageIsDirectory
     } elseif ($case.ContainsKey('Storage')) {
         Run-Case -name $case.Name -caseCommands $case.Commands -expected (Format-Session $case.Messages) `
                 -expectedStorage $case.Storage

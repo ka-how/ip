@@ -158,7 +158,7 @@ task list using a stable representation. This is verified as the closest
 automated check because saving does not add console output.
 
 Inputs: `todo read book`, `deadline return book /by Friday`,
-`event meeting /from 2pm /to 4pm`, `mark 2`, `bye`
+`event meeting /from 2pm /to 4pm`, `todo compare A | B`, `mark 2`, `bye`
 
 Expected file at `data/moistbot.txt`:
 
@@ -166,6 +166,7 @@ Expected file at `data/moistbot.txt`:
 T | 0 | read book
 D | 1 | return book | Friday
 E | 0 | meeting | 2pm | 4pm
+T | 0 | compare A \| B
 ```
 
 Expected console output: The existing successful add and mark confirmations,
@@ -182,6 +183,7 @@ Initial file at `data/moistbot.txt`:
 T | 1 | read book
 D | 0 | return book | Friday
 E | 0 | meeting | 2pm | 4pm
+T | 0 | review A \| B \\ notes
 ```
 
 Inputs: `list`, `bye`
@@ -193,6 +195,7 @@ Certainly. Here is your task list:
 1.[T][X] read book
 2.[D][ ] return book (by: Friday)
 3.[E][ ] meeting (from: 2pm to: 4pm)
+4.[T][ ] review A | B \ notes
 ```
 
 The shared farewell follows. Loading produces no additional console output.
@@ -213,9 +216,59 @@ Inputs: `list`, `bye`
 Expected output:
 
 ```text
-My apologies, but I could not load your saved tasks because line 1 in data/moistbot.txt is invalid. Please correct or remove the file, then restart MoistBot.
+My apologies, but I could not load your saved tasks because line 1 in the save file is invalid. Please correct or remove the file, then restart MoistBot.
 Certainly. Here is your task list:
 Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, or unmark.
 ```
 
 The shared farewell follows.
+
+## Test case 14: missing save paths start safely
+
+Aim: Confirm that MoistBot starts with an empty task list when either the
+relative `data` folder or `data/moistbot.txt` does not yet exist.
+
+Setup: Run once without the `data` folder, and once with an empty `data`
+folder but no save file.
+
+Inputs: `list`, `bye`
+
+Expected output: The empty-list response from test case 2, followed by the
+shared farewell. No storage error is shown.
+
+## Test case 15: invalid save-file path is reported safely
+
+Aim: Confirm that an unreadable save-file path does not crash MoistBot and
+that a task addition is rolled back when it cannot be saved.
+
+Setup: Create a directory at the relative `data/moistbot.txt` path.
+
+Inputs: `todo buy milk`, `list`, `bye`
+
+Expected output:
+
+```text
+My apologies, but I could not read your saved task list. Please check that the save file is readable, then restart MoistBot.
+My apologies, but I could not save your task list. Please check that the data folder is writable, then try your command again.
+```
+
+No addition confirmation is shown. The following `list` response remains
+empty, confirming that the unsaved task was rolled back, and MoistBot
+continues to the shared farewell.
+
+## Test case 16: oversized saved list is rejected atomically
+
+Aim: Confirm that a save file exceeding the current 100-task capacity is
+rejected before any tasks are inserted.
+
+Setup: Populate `data/moistbot.txt` with 101 valid todo records.
+
+Inputs: `list`, `bye`
+
+Expected output:
+
+```text
+My apologies, but the save file contains more tasks than MoistBot can hold. Please reduce the number of saved tasks, then restart MoistBot.
+```
+
+The list remains empty and MoistBot continues to the shared farewell.
