@@ -8,10 +8,10 @@ import moistbot.task.TaskManager;
 import moistbot.ui.UserInterface;
 
 /**
- * MoistBot is a simple console-based task tracker application that teaches Java fundamentals.
- * The application accepts commands such as adding, listing, marking, unmarking, and deleting tasks.
- * Parsing and command handling are separated into helper classes (Parser, Command, TaskManager)
- * for clarity, maintainability, and easier testing.
+ * Coordinates the storage, task-management, and console-interface components of MoistBot.
+ *
+ * <p>The application loads saved tasks before accepting commands and keeps processing input
+ * until the user exits or the input stream closes.</p>
  */
 public final class MoistBot {
     /** The persistence service configured for this application instance. */
@@ -24,9 +24,9 @@ public final class MoistBot {
     private final UserInterface ui;
 
     /**
-     * Creates a MoistBot application backed by the specified task data file.
+     * Creates a MoistBot application that persists tasks at the specified file path.
      *
-     * @param filePath The path used to load and save tasks
+     * @param filePath the path used to load and save tasks
      */
     public MoistBot(String filePath) {
         storage = new Storage(filePath);
@@ -35,18 +35,19 @@ public final class MoistBot {
     }
 
     /**
-     * Entry point of the MoistBot application.
+     * Starts MoistBot using its default task data file.
      *
-     * @param args Command-line arguments (not used by this application)
+     * @param args command-line arguments, which MoistBot does not use
      */
     public static void main(String[] args) {
         new MoistBot("data/moistbot.txt").run();
     }
 
     /**
-     * Runs the interactive command loop until the user exits or the input stream closes.
-     * The scanner is scoped to the application lifetime, so System.in is closed when the
-     * application terminates.
+     * Loads saved tasks and runs the interactive command loop.
+     *
+     * <p>The loop ends when an exit command is processed or the input stream closes. Closing the
+     * user interface also releases the input resource at the end of the application lifetime.</p>
      */
     public void run() {
         ui.printWelcome();
@@ -61,7 +62,10 @@ public final class MoistBot {
     }
 
     /**
-     * Loads saved tasks while allowing the application to remain usable if loading fails.
+     * Restores persisted tasks into the task manager.
+     *
+     * <p>A storage error is shown to the user instead of terminating the application, allowing
+     * the command loop to continue with an empty task list.</p>
      */
     private void loadSavedTasks() {
         try {
@@ -72,10 +76,13 @@ public final class MoistBot {
     }
 
     /**
-     * Parses and executes one user command, displaying any input error to the user.
+     * Parses and executes one command while handling errors at the application boundary.
+     *
+     * <p>Expected command errors and unexpected runtime errors are reported to the user so that a
+     * malformed command does not terminate the command loop.</p>
      *
      * @param input the command entered by the user
-     * @return whether the command requests the application to exit
+     * @return {@code true} if the command requests an application exit; {@code false} otherwise
      */
     private boolean processCommand(String input) {
         try {
