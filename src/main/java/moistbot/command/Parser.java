@@ -19,7 +19,7 @@ public final class Parser {
     private static final String EVENT_TO_SEPARATOR = "/to";
     private static final String INPUT_ERROR = "Please enter a command, such as 'list' or 'todo buy milk'.";
     private static final String UNKNOWN_COMMAND = "My apologies, but I do not recognise the command '%s'. "
-            + "Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.";
+            + "Available commands are: bye, list, find, todo, deadline, event, mark, unmark, and delete.";
 
     /**
      * Prevents instantiation because parsing operations do not require object state.
@@ -29,7 +29,7 @@ public final class Parser {
 
     /**
      * Parses a user-entered line into a command object.
-     * Recognizes command keywords (bye, list, mark, unmark, delete, todo, deadline, event)
+     * Recognizes command keywords (bye, list, find, mark, unmark, delete, todo, deadline, event)
      * and delegates to specialized parsing methods for complex commands.
      *
      * @param inputString The raw text entered by the user
@@ -79,6 +79,8 @@ public final class Parser {
                 return parseCommandWithoutArguments("bye", inputArray);
             case "list":
                 return parseList(inputArray);
+            case "find":
+                return parseFind(inputArray);
             case "mark":
                 return parseTaskNumber("mark", inputArray);
             case "unmark":
@@ -130,6 +132,17 @@ public final class Parser {
             throw new MoistBotException("Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example "
                     + "'list 2019-12-03'.");
         }
+    }
+
+    /**
+     * Parses a command that searches task descriptions for a required term.
+     */
+    private static Command parseFind(String[] inputArray) throws MoistBotException {
+        if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
+            throw new MoistBotException("Please provide text to find. Usage: find <search term>, for example "
+                    + "'find book'.");
+        }
+        return new FindCommand(inputArray[1].trim());
     }
 
     /**
