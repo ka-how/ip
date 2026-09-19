@@ -1,6 +1,10 @@
 package moistbot.command;
 
 import moistbot.exception.MoistBotException;
+import moistbot.util.DateTimeUtil;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 /**
  * Parses raw user input into a {@link Command} object understood by MoistBot.
@@ -8,8 +12,8 @@ import moistbot.exception.MoistBotException;
  * required arguments before constructing the corresponding command object.
  */
 public final class Parser {
-    private static final String DEADLINE_USAGE = "deadline <desc> /by <time>";
-    private static final String EVENT_USAGE = "event <desc> /from <time> /to <time>";
+    private static final String DEADLINE_USAGE = "deadline <desc> /by <yyyy-MM-dd> [HHmm]";
+    private static final String EVENT_USAGE = "event <desc> /from <date> [HHmm] /to <date> [HHmm]";
     private static final String DEADLINE_SEPARATOR = "/by";
     private static final String EVENT_FROM_SEPARATOR = "/from";
     private static final String EVENT_TO_SEPARATOR = "/to";
@@ -74,7 +78,7 @@ public final class Parser {
             case "bye":
                 return parseCommandWithoutArguments("bye", inputArray);
             case "list":
-                return parseCommandWithoutArguments("list", inputArray);
+                return parseList(inputArray);
             case "mark":
                 return parseTaskNumber("mark", inputArray);
             case "unmark":
@@ -110,6 +114,22 @@ public final class Parser {
             return new ExitCommand();
         }
         return new ListCommand();
+    }
+
+    /**
+     * Parses an unfiltered list command or one with an inclusive cutoff date.
+     */
+    private static Command parseList(String[] inputArray) throws MoistBotException {
+        if (inputArray.length == 1) {
+            return new ListCommand();
+        }
+        try {
+            LocalDate cutoffDate = DateTimeUtil.parseDate(inputArray[1]);
+            return new ListCommand(cutoffDate);
+        } catch (DateTimeParseException e) {
+            throw new MoistBotException("Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example "
+                    + "'list 2019-12-03'.");
+        }
     }
 
     /**
@@ -181,7 +201,7 @@ public final class Parser {
     private static Command parseDeadlineCommand(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
             throw new MoistBotException("Please provide a deadline description and time. Usage: " + DEADLINE_USAGE
-                    + ", for example 'deadline return book /by Friday'.");
+                    + ", for example 'deadline return book /by 2019-12-02 1800'.");
         }
         return parseDeadline(inputArray[1]);
     }
@@ -195,8 +215,8 @@ public final class Parser {
      */
     private static Command parseEventCommand(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
-            throw new MoistBotException("Please provide an event description and times. Usage: " + EVENT_USAGE
-                    + ", for example 'event meeting /from 2pm /to 4pm'.");
+            throw new MoistBotException("Please provide an event description and dates. Usage: " + EVENT_USAGE
+                    + ", for example 'event meeting /from 2019-12-02 1400 /to 2019-12-02 1600'.");
         }
         return parseEvent(inputArray[1]);
     }
@@ -231,7 +251,13 @@ public final class Parser {
             throw new MoistBotException("Please provide a deadline time after '/by'. Usage: " + DEADLINE_USAGE + ".");
         }
 
-        return new DeadlineCommand(description, by);
+        try {
+            DateTimeUtil.ParsedDateTime deadline = DateTimeUtil.parse(by);
+            return new DeadlineCommand(description, deadline.date(), deadline.time());
+        } catch (DateTimeParseException e) {
+            throw new MoistBotException("Please enter a valid deadline as yyyy-MM-dd or d/M/yyyy, with an "
+                    + "optional 24-hour HHmm time, for example '2019-12-02 1800'.");
+        }
     }
 
     /**
@@ -270,14 +296,47 @@ public final class Parser {
                     + EVENT_USAGE + ".");
         }
         if (from.isEmpty()) {
-            throw new MoistBotException("Please provide an event start time after '/from'. Usage: "
+            throw new MoistBotException("Please provide an event start date after '/from'. Usage: "
                     + EVENT_USAGE + ".");
         }
         if (to.isEmpty()) {
-            throw new MoistBotException("Please provide an event end time after '/to'. Usage: " + EVENT_USAGE + ".");
+            throw new MoistBotException("Please provide an event end date after '/to'. Usage: " + EVENT_USAGE + ".");
         }
 
-        return new EventCommand(description, from, to);
+        DateTimeUtil.ParsedDateTime start = parseEventDateTime(from, "start");
+        DateTimeUtil.ParsedDateTime end = parseEventDateTime(to, "end");
+        validateEventRange(start, end);
+        return new EventCommand(description, start.date(), start.time(), end.date(), end.time());
+    }
+
+    /**
+     * Parses one event endpoint and provides an endpoint-specific correction.
+     */
+    private static DateTimeUtil.ParsedDateTime parseEventDateTime(String input, String endpoint)
+            throws MoistBotException {
+        try {
+            return DateTimeUtil.parse(input);
+        } catch (DateTimeParseException e) {
+            throw new MoistBotException("Please enter a valid event " + endpoint + " as yyyy-MM-dd or d/M/yyyy, "
+                    + "with an optional 24-hour HHmm time.");
+        }
+    }
+
+    /**
+     * Rejects ambiguous or backwards event ranges before they reach the task list.
+     */
+    private static void validateEventRange(DateTimeUtil.ParsedDateTime start, DateTimeUtil.ParsedDateTime end)
+            throws MoistBotException {
+        if ((start.time() == null) != (end.time() == null)) {
+            throw new MoistBotException("Please provide times for both event endpoints, or omit both times.");
+        }
+
+        boolean hasBackwardsDates = start.date().isAfter(end.date());
+        boolean hasBackwardsTimes = start.date().equals(end.date()) && start.time() != null
+                && start.time().isAfter(end.time());
+        if (hasBackwardsDates || hasBackwardsTimes) {
+            throw new MoistBotException("Please ensure the event end is not before its start.");
+        }
     }
 
     /**

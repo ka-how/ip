@@ -3,24 +3,34 @@ package moistbot.command;
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * Adds an event task with a start and end time to the task list.
  */
 public final class EventCommand extends AddCommand {
-    private final String from;
-    private final String to;
+    private final LocalDate startDate;
+    private final LocalTime startTime;
+    private final LocalDate endDate;
+    private final LocalTime endTime;
 
     /**
      * Creates an event command for the supplied description and times.
      *
      * @param description The event task description
-     * @param from The event start time
-     * @param to The event end time
+     * @param startDate The event start date
+     * @param startTime The optional event start time
+     * @param endDate The event end date
+     * @param endTime The optional event end time
      */
-    public EventCommand(String description, String from, String to) {
+    public EventCommand(String description, LocalDate startDate, LocalTime startTime,
+            LocalDate endDate, LocalTime endTime) {
         super(description);
-        this.from = from;
-        this.to = to;
+        this.startDate = startDate;
+        this.startTime = startTime;
+        this.endDate = endDate;
+        this.endTime = endTime;
     }
 
     /**
@@ -31,6 +41,6 @@ public final class EventCommand extends AddCommand {
      */
     @Override
     protected Task createTask(TaskManager tasks) {
-        return tasks.addEvent(getDescription(), from, to);
+        return tasks.addEvent(getDescription(), startDate, startTime, endDate, endTime);
     }
 }

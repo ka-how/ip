@@ -1,5 +1,7 @@
 package moistbot.task;
 
+import java.time.LocalDate;
+
 /**
  * Represents a single task in the task list.
  * Each task has a description and a completion status that can be toggled.
@@ -85,5 +87,16 @@ public class Task {
      */
     public char getTaskType() {
         return taskType;
+    }
+
+    /**
+     * Returns whether this task has a relevant date on or before a cutoff.
+     * Undated task types are excluded from date-filtered lists by default.
+     *
+     * @param cutoffDate The inclusive date limit
+     * @return True if the task is dated on or before the cutoff
+     */
+    public boolean isDatedOnOrBefore(LocalDate cutoffDate) {
+        return false;
     }
 }

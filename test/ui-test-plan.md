@@ -61,12 +61,14 @@ Certainly. Here is your task list:
 Aim: Confirm that all successful task operations retain their behavior and use
 the new tone.
 
-Inputs: `todo read book`, `deadline return book /by Friday`,
-`event team meeting /from 2pm /to 4pm`, `mark 2`, `list`, `unmark 2`, `bye`
+Inputs: `todo read book`, `deadline return book /by 2/12/2019 1800`,
+`event team meeting /from 3/12/2019 1400 /to 3/12/2019 1600`,
+`mark 2`, `list`, `unmark 2`, `bye`
 
-Expected output: Each addition begins “Certainly. I have added this task:”,
-the deadline is marked complete then incomplete, and the list contains all
-three tasks.
+Expected output: Each addition begins “Certainly. I have added this task:”.
+The deadline is displayed as `Dec 02 2019, 6:00 PM`, is marked complete then
+incomplete, and the event is displayed from `Dec 03 2019, 2:00 PM` to
+`Dec 03 2019, 4:00 PM`. The list contains all three tasks.
 
 ## Test case 5: unrecognised command
 
@@ -85,14 +87,18 @@ The following list remains empty as in test case 2.
 ## Test case 6: malformed additions
 
 Aim: Confirm that malformed todo, deadline, and event commands provide polite,
-actionable corrections and do not add tasks.
+actionable corrections and do not add tasks. Invalid calendar dates, times,
+unsupported date text, inconsistent event endpoint precision, and backwards
+event ranges are also rejected without changing the task list.
 
 Inputs: the malformed command sequence in `test/test-ui.ps1` test case 6,
 followed by valid deadline and event commands, `list`, and `bye`.
 
 Expected output: Missing fields begin with “Please provide” or “Please
-include”; duplicate separators explain that only one is allowed. The final list
-contains only `revise notes` and `lab`.
+include”; duplicate separators explain that only one is allowed. Invalid date
+values explain the accepted formats. The final list contains only `revise
+notes`, displayed with `Oct 15 2019`, and the date-only `lab` event running
+from `Oct 16 2019` to `Oct 17 2019`.
 
 ## Test case 7: invalid mark and unmark
 
@@ -118,16 +124,17 @@ Expected output:
 Please enter a command, such as 'list' or 'todo buy milk'.
 ```
 
-## Test case 9: arguments for argument-free commands
+## Test case 9: list date validation and argument-free commands
 
-Aim: Confirm that `list` and `bye` reject extra text politely.
+Aim: Confirm that `list` rejects an invalid date and `bye` rejects extra text
+politely.
 
 Inputs: `list now`, `bye now`, `list`, `bye`
 
 Expected output:
 
 ```text
-The 'list' command does not accept arguments. Please enter only 'list'.
+Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example 'list 2019-12-03'.
 The 'bye' command does not accept arguments. Please enter only 'bye'.
 ```
 
@@ -168,15 +175,16 @@ Aim: Confirm that additions, completion-status changes, and deletions rewrite th
 task list using a stable representation. This is verified as the closest
 automated check because saving does not add console output.
 
-Inputs: `todo read book`, `deadline return book /by Friday`,
-`event meeting /from 2pm /to 4pm`, `todo compare A | B`, `mark 2`, `delete 1`,
+Inputs: `todo read book`, `deadline return book /by 2/12/2019 1800`,
+`event meeting /from 3/12/2019 1400 /to 3/12/2019 1600`,
+`todo compare A | B`, `mark 2`, `delete 1`,
 `bye`
 
 Expected file at `data/moistbot.txt`:
 
 ```text
-D | 1 | return book | Friday
-E | 0 | meeting | 2pm | 4pm
+D | 1 | return book | 2019-12-02 1800
+E | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600
 T | 0 | compare A \| B
 ```
 
@@ -193,8 +201,8 @@ Initial file at `data/moistbot.txt` (with an optional UTF-8 byte-order mark):
 
 ```text
 T | 1 | read book
-D | 0 | return book | Friday
-E | 0 | meeting | 2pm | 4pm
+D | 0 | return book | 2019-12-02 1800
+E | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600
 T | 0 | review A \| B \\ notes
 ```
 
@@ -205,8 +213,8 @@ Expected output:
 ```text
 Certainly. Here is your task list:
 1.[T][X] read book
-2.[D][ ] return book (by: Friday)
-3.[E][ ] meeting (from: 2pm to: 4pm)
+2.[D][ ] return book (by: Dec 02 2019, 6:00 PM)
+3.[E][ ] meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)
 4.[T][ ] review A | B \ notes
 ```
 
@@ -223,8 +231,11 @@ Initial-file variants:
 - Invalid completion flag: `T | maybe | read book`
 - Unknown task type: `X | 0 | read book`
 - Missing field: `D | 0 | return book`
+- Invalid deadline date: `D | 0 | return book | Friday`
+- Invalid event dates: `E | 0 | meeting | Tuesday | Wednesday`
+- Backwards event range: `E | 0 | meeting | 2019-12-04 | 2019-12-03`
 - Extra field: `T | 0 | read book | extra`
-- Blank required field: `E | 0 | meeting | 2pm | `
+- Blank required field: `E | 0 | meeting | 2019-12-03 | `
 - Blank line between otherwise valid records
 - A valid first record followed by malformed line 2
 - Invalid UTF-8 bytes
@@ -285,3 +296,29 @@ Inputs: `todo task 1` through `todo task 101`, `list`, `bye`.
 
 Expected output: All 101 additions succeed and report the updated count. The
 final list contains tasks 1 through 101 with no capacity error.
+
+## Test case 18: list deadlines and events by date
+
+Aim: Confirm that `list <date>` displays only deadlines due and events starting
+on or before the inclusive cutoff while retaining their original task numbers.
+
+Inputs: Add one todo, deadlines before, on, and after 3 December 2019, and
+events starting before, on, and after that date. Enter `list 3/12/2019`, then
+`list 2019-11-30`, and `bye`.
+
+Expected output:
+
+```text
+Certainly. Here are your deadlines and events on or before Dec 03 2019:
+2.[D][ ] early deadline (by: Dec 01 2019)
+3.[D][ ] cutoff deadline (by: Dec 03 2019, 6:00 PM)
+5.[E][ ] ongoing event (from: Dec 02 2019 to: Dec 05 2019)
+6.[E][ ] cutoff event (from: Dec 03 2019, 9:00 AM to: Dec 03 2019, 10:00 AM)
+```
+
+The todo and later dated tasks are omitted. The earlier cutoff produces:
+
+```text
+Certainly. Here are your deadlines and events on or before Nov 30 2019:
+There are no deadlines or events on or before Nov 30 2019. Please enter another date or use 'list' to view all tasks.
+```

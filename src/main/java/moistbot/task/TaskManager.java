@@ -2,6 +2,8 @@ package moistbot.task;
 
 import moistbot.exception.MoistBotException;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,23 +34,27 @@ public final class TaskManager {
      * Adds a new deadline task to the task list.
      *
      * @param description The description of the deadline task
-     * @param by The deadline for the task
+     * @param deadlineDate The deadline date
+     * @param deadlineTime The optional deadline time
      * @return The task that was added
      */
-    public Task addDeadline(String description, String by) {
-        return addTask(new Deadline(description, by));
+    public Task addDeadline(String description, LocalDate deadlineDate, LocalTime deadlineTime) {
+        return addTask(new Deadline(description, deadlineDate, deadlineTime));
     }
 
     /**
      * Adds a new event task to the task list.
      *
      * @param description The description of the event
-     * @param from The start time of the event
-     * @param to The end time of the event
+     * @param startDate The event start date
+     * @param startTime The optional event start time
+     * @param endDate The event end date
+     * @param endTime The optional event end time
      * @return The task that was added
      */
-    public Task addEvent(String description, String from, String to) {
-        return addTask(new Event(description, from, to));
+    public Task addEvent(String description, LocalDate startDate, LocalTime startTime,
+            LocalDate endDate, LocalTime endTime) {
+        return addTask(new Event(description, startDate, startTime, endDate, endTime));
     }
 
     /**
