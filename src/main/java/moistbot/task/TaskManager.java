@@ -2,10 +2,10 @@ package moistbot.task;
 
 import moistbot.exception.MoistBotException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages a dynamically sized list of tasks stored in memory.
@@ -46,12 +46,15 @@ public final class TaskManager {
      * Adds a new event task to the task list.
      *
      * @param description The description of the event
-     * @param from The start time of the event
-     * @param to The end time of the event
+     * @param startDate The event start date
+     * @param startTime The optional event start time
+     * @param endDate The event end date
+     * @param endTime The optional event end time
      * @return The task that was added
      */
-    public Task addEvent(String description, String from, String to) {
-        return addTask(new Event(description, from, to));
+    public Task addEvent(String description, LocalDate startDate, LocalTime startTime,
+            LocalDate endDate, LocalTime endTime) {
+        return addTask(new Event(description, startDate, startTime, endDate, endTime));
     }
 
     /**

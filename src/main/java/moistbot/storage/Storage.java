@@ -121,8 +121,10 @@ public final class Storage {
                 if (!(task instanceof Event event)) {
                     throw unsupportedTaskException();
                 }
-                return commonFields + FIELD_SEPARATOR + escapeField(event.getFrom())
-                        + FIELD_SEPARATOR + escapeField(event.getTo());
+                return commonFields + FIELD_SEPARATOR + escapeField(DateTimeUtil.formatForStorage(
+                        event.getStartDate(), event.getStartTime()))
+                        + FIELD_SEPARATOR + escapeField(DateTimeUtil.formatForStorage(
+                        event.getEndDate(), event.getEndTime()));
             case Task.TYPE_TODO:
                 return commonFields;
             default:
@@ -155,7 +157,7 @@ public final class Storage {
         } else if (fields.length == 4 && "D".equals(fields[0])) {
             task = parseDeadline(description, fields[3], lineNumber);
         } else if (fields.length == 5 && "E".equals(fields[0])) {
-            task = new Event(description, fields[3], fields[4]);
+            task = parseEvent(description, fields[3], fields[4], lineNumber);
         } else {
             throw invalidDataException(lineNumber);
         }
@@ -178,6 +180,34 @@ public final class Storage {
         } catch (DateTimeParseException e) {
             throw invalidDataException(lineNumber);
         }
+    }
+
+    /**
+     * Restores an event while ensuring both saved endpoints form a valid range.
+     */
+    private static Event parseEvent(String description, String storedStart, String storedEnd, int lineNumber)
+            throws MoistBotException {
+        try {
+            DateTimeUtil.ParsedDateTime start = DateTimeUtil.parse(storedStart);
+            DateTimeUtil.ParsedDateTime end = DateTimeUtil.parse(storedEnd);
+            if (isInvalidEventRange(start, end)) {
+                throw invalidDataException(lineNumber);
+            }
+            return new Event(description, start.date(), start.time(), end.date(), end.time());
+        } catch (DateTimeParseException e) {
+            throw invalidDataException(lineNumber);
+        }
+    }
+
+    /**
+     * Returns whether event endpoints have inconsistent precision or run backwards.
+     */
+    private static boolean isInvalidEventRange(DateTimeUtil.ParsedDateTime start, DateTimeUtil.ParsedDateTime end) {
+        if ((start.time() == null) != (end.time() == null)) {
+            return true;
+        }
+        return start.date().isAfter(end.date()) || start.date().equals(end.date()) && start.time() != null
+                && start.time().isAfter(end.time());
     }
 
     /**

@@ -62,11 +62,13 @@ Aim: Confirm that all successful task operations retain their behavior and use
 the new tone.
 
 Inputs: `todo read book`, `deadline return book /by 2/12/2019 1800`,
-`event team meeting /from 2pm /to 4pm`, `mark 2`, `list`, `unmark 2`, `bye`
+`event team meeting /from 3/12/2019 1400 /to 3/12/2019 1600`,
+`mark 2`, `list`, `unmark 2`, `bye`
 
 Expected output: Each addition begins “Certainly. I have added this task:”.
 The deadline is displayed as `Dec 02 2019, 6:00 PM`, is marked complete then
-incomplete, and the list contains all three tasks.
+incomplete, and the event is displayed from `Dec 03 2019, 2:00 PM` to
+`Dec 03 2019, 4:00 PM`. The list contains all three tasks.
 
 ## Test case 5: unrecognised command
 
@@ -86,7 +88,8 @@ The following list remains empty as in test case 2.
 
 Aim: Confirm that malformed todo, deadline, and event commands provide polite,
 actionable corrections and do not add tasks. Invalid calendar dates, times,
-and unsupported date text are also rejected without changing the task list.
+unsupported date text, inconsistent event endpoint precision, and backwards
+event ranges are also rejected without changing the task list.
 
 Inputs: the malformed command sequence in `test/test-ui.ps1` test case 6,
 followed by valid deadline and event commands, `list`, and `bye`.
@@ -94,7 +97,8 @@ followed by valid deadline and event commands, `list`, and `bye`.
 Expected output: Missing fields begin with “Please provide” or “Please
 include”; duplicate separators explain that only one is allowed. Invalid date
 values explain the accepted formats. The final list contains only `revise
-notes`, displayed with `Oct 15 2019`, and `lab`.
+notes`, displayed with `Oct 15 2019`, and the date-only `lab` event running
+from `Oct 16 2019` to `Oct 17 2019`.
 
 ## Test case 7: invalid mark and unmark
 
@@ -171,14 +175,15 @@ task list using a stable representation. This is verified as the closest
 automated check because saving does not add console output.
 
 Inputs: `todo read book`, `deadline return book /by 2/12/2019 1800`,
-`event meeting /from 2pm /to 4pm`, `todo compare A | B`, `mark 2`, `delete 1`,
+`event meeting /from 3/12/2019 1400 /to 3/12/2019 1600`,
+`todo compare A | B`, `mark 2`, `delete 1`,
 `bye`
 
 Expected file at `data/moistbot.txt`:
 
 ```text
 D | 1 | return book | 2019-12-02 1800
-E | 0 | meeting | 2pm | 4pm
+E | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600
 T | 0 | compare A \| B
 ```
 
@@ -196,7 +201,7 @@ Initial file at `data/moistbot.txt` (with an optional UTF-8 byte-order mark):
 ```text
 T | 1 | read book
 D | 0 | return book | 2019-12-02 1800
-E | 0 | meeting | 2pm | 4pm
+E | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600
 T | 0 | review A \| B \\ notes
 ```
 
@@ -208,7 +213,7 @@ Expected output:
 Certainly. Here is your task list:
 1.[T][X] read book
 2.[D][ ] return book (by: Dec 02 2019, 6:00 PM)
-3.[E][ ] meeting (from: 2pm to: 4pm)
+3.[E][ ] meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)
 4.[T][ ] review A | B \ notes
 ```
 
@@ -226,8 +231,10 @@ Initial-file variants:
 - Unknown task type: `X | 0 | read book`
 - Missing field: `D | 0 | return book`
 - Invalid deadline date: `D | 0 | return book | Friday`
+- Invalid event dates: `E | 0 | meeting | Tuesday | Wednesday`
+- Backwards event range: `E | 0 | meeting | 2019-12-04 | 2019-12-03`
 - Extra field: `T | 0 | read book | extra`
-- Blank required field: `E | 0 | meeting | 2pm | `
+- Blank required field: `E | 0 | meeting | 2019-12-03 | `
 - Blank line between otherwise valid records
 - A valid first record followed by malformed line 2
 - Invalid UTF-8 bytes

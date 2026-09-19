@@ -141,13 +141,14 @@ $cases = @(
         "Certainly. I have added this task:`n[T][ ] buy milk`nYour list now contains 1 task.",
         "Certainly. Here is your task list:`n1.[T][ ] buy milk", $exitMessage) },
     @{ Name = 'add deadline, event, mark, and unmark'; Commands = @(
-        'todo read book', 'deadline return book /by 2/12/2019 1800', 'event team meeting /from 2pm /to 4pm',
+        'todo read book', 'deadline return book /by 2/12/2019 1800',
+        'event team meeting /from 3/12/2019 1400 /to 3/12/2019 1600',
         'mark 2', 'list', 'unmark 2', 'bye'); Messages = @(
         "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
         "Certainly. I have added this task:`n[D][ ] return book (by: Dec 02 2019, 6:00 PM)`nYour list now contains 2 tasks.",
-        "Certainly. I have added this task:`n[E][ ] team meeting (from: 2pm to: 4pm)`nYour list now contains 3 tasks.",
+        "Certainly. I have added this task:`n[E][ ] team meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)`nYour list now contains 3 tasks.",
         "Certainly. I have marked this task as complete:`n[D][X] return book (by: Dec 02 2019, 6:00 PM)",
-        "Certainly. Here is your task list:`n1.[T][ ] read book`n2.[D][X] return book (by: Dec 02 2019, 6:00 PM)`n3.[E][ ] team meeting (from: 2pm to: 4pm)",
+        "Certainly. Here is your task list:`n1.[T][ ] read book`n2.[D][X] return book (by: Dec 02 2019, 6:00 PM)`n3.[E][ ] team meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)",
         "Certainly. I have marked this task as incomplete:`n[D][ ] return book (by: Dec 02 2019, 6:00 PM)", $exitMessage) },
     @{ Name = 'unrecognised command'; Commands = @('buy groceries today', 'list', 'bye'); Messages = @(
         "My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.",
@@ -156,10 +157,15 @@ $cases = @(
         'todo', 'deadline', 'deadline pay bills', 'deadline /by Friday', 'deadline pay bills /by',
         'deadline pay bills /by Friday /by Saturday', 'deadline invalid /by Friday',
         'deadline impossible /by 2019-02-29', 'deadline invalid time /by 2019-12-02 2460',
-        'event meeting /from 2pm', 'event meeting /to 4pm',
+        'event', 'event meeting /from 2pm', 'event meeting /to 4pm',
         'event /from 2pm /to 4pm', 'event meeting /from /to 4pm', 'event meeting /from 2pm /to',
         'event meeting /to 4pm /from 2pm', 'event meeting /from 1pm /from 2pm /to 4pm',
-        'deadline revise notes /by 2019-10-15', 'event lab /from 10am /to 12pm', 'list', 'bye'); Messages = @(
+        'event invalid start /from Friday /to 2019-12-03',
+        'event invalid end /from 2019-12-03 1400 /to 2019-12-03 2460',
+        'event partial time /from 2019-12-03 1400 /to 2019-12-03',
+        'event backwards /from 2019-12-03 1600 /to 2019-12-03 1400',
+        'deadline revise notes /by 2019-10-15',
+        'event lab /from 2019-10-16 /to 2019-10-17', 'list', 'bye'); Messages = @(
         "Please provide a description for the todo task. Usage: todo <description>, for example 'todo buy milk'.",
         "Please provide a deadline description and time. Usage: deadline <desc> /by <yyyy-MM-dd> [HHmm], for example 'deadline return book /by 2019-12-02 1800'.",
         "Please include the '/by' separator. Usage: deadline <desc> /by <yyyy-MM-dd> [HHmm].",
@@ -169,16 +175,21 @@ $cases = @(
         "Please enter a valid deadline as yyyy-MM-dd or d/M/yyyy, with an optional 24-hour HHmm time, for example '2019-12-02 1800'.",
         "Please enter a valid deadline as yyyy-MM-dd or d/M/yyyy, with an optional 24-hour HHmm time, for example '2019-12-02 1800'.",
         "Please enter a valid deadline as yyyy-MM-dd or d/M/yyyy, with an optional 24-hour HHmm time, for example '2019-12-02 1800'.",
-        "Please include the '/to' separator. Usage: event <desc> /from <time> /to <time>.",
-        "Please include the '/from' separator. Usage: event <desc> /from <time> /to <time>.",
-        "Please provide an event description before '/from'. Usage: event <desc> /from <time> /to <time>.",
-        "Please provide an event start time after '/from'. Usage: event <desc> /from <time> /to <time>.",
-        "Please provide an event end time after '/to'. Usage: event <desc> /from <time> /to <time>.",
-        "Please place '/from' before '/to'. Usage: event <desc> /from <time> /to <time>.",
-        "An event must contain exactly one '/from' and one '/to' separator. Usage: event <desc> /from <time> /to <time>.",
+        "Please provide an event description and dates. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm], for example 'event meeting /from 2019-12-02 1400 /to 2019-12-02 1600'.",
+        "Please include the '/to' separator. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please include the '/from' separator. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please provide an event description before '/from'. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please provide an event start date after '/from'. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please provide an event end date after '/to'. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please place '/from' before '/to'. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "An event must contain exactly one '/from' and one '/to' separator. Usage: event <desc> /from <date> [HHmm] /to <date> [HHmm].",
+        "Please enter a valid event start as yyyy-MM-dd or d/M/yyyy, with an optional 24-hour HHmm time.",
+        "Please enter a valid event end as yyyy-MM-dd or d/M/yyyy, with an optional 24-hour HHmm time.",
+        "Please provide times for both event endpoints, or omit both times.",
+        "Please ensure the event end is not before its start.",
         "Certainly. I have added this task:`n[D][ ] revise notes (by: Oct 15 2019)`nYour list now contains 1 task.",
-        "Certainly. I have added this task:`n[E][ ] lab (from: 10am to: 12pm)`nYour list now contains 2 tasks.",
-        "Certainly. Here is your task list:`n1.[D][ ] revise notes (by: Oct 15 2019)`n2.[E][ ] lab (from: 10am to: 12pm)", $exitMessage) },
+        "Certainly. I have added this task:`n[E][ ] lab (from: Oct 16 2019 to: Oct 17 2019)`nYour list now contains 2 tasks.",
+        "Certainly. Here is your task list:`n1.[D][ ] revise notes (by: Oct 15 2019)`n2.[E][ ] lab (from: Oct 16 2019 to: Oct 17 2019)", $exitMessage) },
     @{ Name = 'invalid mark and unmark preserve completion state'; Commands = @(
         'mark 1', 'todo read book', 'mark', 'unmark one', 'mark 2147483648', 'mark 0', 'mark 2',
         'mark 1 extra', 'mark 1', 'list', 'unmark 1', 'list', 'bye'); Messages = @(
@@ -222,16 +233,18 @@ $cases = @(
 )
 
 $storageCommands = @(
-    'todo read book', 'deadline return book /by 2/12/2019 1800', 'event meeting /from 2pm /to 4pm',
+    'todo read book', 'deadline return book /by 2/12/2019 1800',
+    'event meeting /from 3/12/2019 1400 /to 3/12/2019 1600',
     'todo compare A | B', 'mark 2', 'delete 1', 'bye')
 $storageMessages = @(
     "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
     "Certainly. I have added this task:`n[D][ ] return book (by: Dec 02 2019, 6:00 PM)`nYour list now contains 2 tasks.",
-    "Certainly. I have added this task:`n[E][ ] meeting (from: 2pm to: 4pm)`nYour list now contains 3 tasks.",
+    "Certainly. I have added this task:`n[E][ ] meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)`nYour list now contains 3 tasks.",
     "Certainly. I have added this task:`n[T][ ] compare A | B`nYour list now contains 4 tasks.",
     "Certainly. I have marked this task as complete:`n[D][X] return book (by: Dec 02 2019, 6:00 PM)",
     "Certainly. I have deleted this task:`n[T][ ] read book`nYour list now contains 3 tasks.", $exitMessage)
-$storageContents = "D | 1 | return book | 2019-12-02 1800`nE | 0 | meeting | 2pm | 4pm" `
+$storageContents = "D | 1 | return book | 2019-12-02 1800" `
+        + "`nE | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600" `
         + "`nT | 0 | compare A \| B"
 $cases += @{
     Name = 'task changes are saved to disk'
@@ -241,9 +254,11 @@ $cases += @{
 }
 
 $loadedStorage = [char]0xFEFF + "T | 1 | read book`nD | 0 | return book | 2019-12-02 1800" `
-        + "`nE | 0 | meeting | 2pm | 4pm`nT | 0 | review A \| B \\ notes"
+        + "`nE | 0 | meeting | 2019-12-03 1400 | 2019-12-03 1600" `
+        + "`nT | 0 | review A \| B \\ notes"
 $loadedListMessage = "Certainly. Here is your task list:`n1.[T][X] read book" `
-        + "`n2.[D][ ] return book (by: Dec 02 2019, 6:00 PM)`n3.[E][ ] meeting (from: 2pm to: 4pm)" `
+        + "`n2.[D][ ] return book (by: Dec 02 2019, 6:00 PM)" `
+        + "`n3.[E][ ] meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)" `
         + "`n4.[T][ ] review A | B \ notes"
 $cases += @{
     Name = 'saved tasks are loaded at startup'
@@ -257,8 +272,10 @@ $corruptedStorageCases = @(
     @{ Name = 'unknown task type'; Storage = 'X | 0 | read book'; Line = 1 },
     @{ Name = 'missing task field'; Storage = 'D | 0 | return book'; Line = 1 },
     @{ Name = 'invalid deadline date'; Storage = 'D | 0 | return book | Friday'; Line = 1 },
+    @{ Name = 'invalid event date'; Storage = 'E | 0 | meeting | Tuesday | Wednesday'; Line = 1 },
+    @{ Name = 'backwards event'; Storage = 'E | 0 | meeting | 2019-12-04 | 2019-12-03'; Line = 1 },
     @{ Name = 'extra task field'; Storage = 'T | 0 | read book | extra'; Line = 1 },
-    @{ Name = 'blank required field'; Storage = 'E | 0 | meeting | 2pm | '; Line = 1 },
+    @{ Name = 'blank required field'; Storage = 'E | 0 | meeting | 2019-12-03 | '; Line = 1 },
     @{ Name = 'blank record'; Storage = "T | 0 | read book`n `nD | 0 | return book | 2019-12-02"; Line = 2 },
     @{ Name = 'valid record before corruption'; Storage = "T | 0 | read book`nD | broken"; Line = 2 }
 )
