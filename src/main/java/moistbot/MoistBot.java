@@ -108,10 +108,9 @@ public final class MoistBot {
             case BYE:
             case LIST:
             case TODO:
+            case DEADLINE:
                 command.execute(taskManager, ui, storage);
                 return command.isExit();
-            case DEADLINE:
-                return executeDeadline(command.getDescription(), command.getTo());
             case EVENT:
                 return executeEvent(command.getDescription(), command.getFrom(), command.getTo());
             case MARK:
@@ -123,18 +122,6 @@ public final class MoistBot {
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
-    }
-
-    /**
-     * Executes the deadline command to add a new deadline task.
-     *
-     * @param description The description of the deadline task
-     * @param by The deadline for the task
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task cannot be added or saved
-     */
-    private boolean executeDeadline(String description, String by) throws MoistBotException {
-        return executeAddTask(taskManager.addDeadline(description, by));
     }
 
     /**

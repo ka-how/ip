@@ -215,7 +215,7 @@ public final class Parser {
             throw new MoistBotException("Please provide a deadline time after '/by'. Usage: " + DEADLINE_USAGE + ".");
         }
 
-        return new Command(Command.CommandType.DEADLINE, description, null, by);
+        return new DeadlineCommand(description, by);
     }
 
     /**
