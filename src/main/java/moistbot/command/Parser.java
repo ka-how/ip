@@ -107,6 +107,9 @@ public final class Parser {
             throw new MoistBotException("The '" + commandName + "' command does not accept arguments. Please "
                     + "enter only '" + commandName + "'.");
         }
+        if (commandType == Command.CommandType.BYE) {
+            return new ExitCommand();
+        }
         return new Command(commandType, null);
     }
 

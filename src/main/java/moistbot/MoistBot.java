@@ -106,7 +106,8 @@ public final class MoistBot {
 
         switch (commandType) {
             case BYE:
-                return executeBye();
+                command.execute(taskManager, ui, storage);
+                return command.isExit();
             case LIST:
                 return executeList();
             case TODO:
@@ -124,16 +125,6 @@ public final class MoistBot {
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
-    }
-
-    /**
-     * Executes the bye command to exit the application.
-     *
-     * @return Always returns true to signal application exit
-     */
-    private boolean executeBye() {
-        ui.printExit();
-        return true;
     }
 
     /**
