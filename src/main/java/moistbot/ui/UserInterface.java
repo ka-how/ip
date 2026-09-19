@@ -149,13 +149,39 @@ public final class UserInterface implements AutoCloseable {
         int size = taskManager.getSize();
         if (size == 0) {
             System.out.println("Your task list is presently empty. You may use: bye, list, todo, deadline, event, "
-                    + "mark, unmark, or delete.");
+                    + "find, mark, unmark, or delete.");
         }
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
             System.out.println(formatTaskDetails(taskManager.getTask(i + 1)));
         }
 
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Displays tasks whose descriptions contain the supplied search term.
+     * Matching tasks are numbered by their order in the search results.
+     *
+     * @param taskManager The task list to search
+     * @param searchTerm The text that matching descriptions must contain
+     */
+    public void printMatchingTasks(TaskManager taskManager, String searchTerm) {
+        System.out.println(DIVIDER);
+        System.out.println("Certainly. Here are the matching tasks in your list:");
+
+        int matchNumber = 0;
+        for (int taskNumber = 1; taskNumber <= taskManager.getSize(); taskNumber++) {
+            Task task = taskManager.getTask(taskNumber);
+            if (task.getDescription().contains(searchTerm)) {
+                matchNumber++;
+                System.out.println(matchNumber + "." + formatTaskDetails(task));
+            }
+        }
+        if (matchNumber == 0) {
+            System.out.println("My apologies, but no task descriptions contain '" + searchTerm
+                    + "'. Please try another search term.");
+        }
         System.out.println(DIVIDER);
     }
 
