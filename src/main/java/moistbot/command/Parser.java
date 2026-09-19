@@ -261,7 +261,7 @@ public final class Parser {
             throw new MoistBotException("Please provide an event end time after '/to'. Usage: " + EVENT_USAGE + ".");
         }
 
-        return new Command(Command.CommandType.EVENT, description, from, to);
+        return new EventCommand(description, from, to);
     }
 
     /**

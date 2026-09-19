@@ -109,10 +109,9 @@ public final class MoistBot {
             case LIST:
             case TODO:
             case DEADLINE:
+            case EVENT:
                 command.execute(taskManager, ui, storage);
                 return command.isExit();
-            case EVENT:
-                return executeEvent(command.getDescription(), command.getFrom(), command.getTo());
             case MARK:
                 return executeMark(command.getDescription());
             case UNMARK:
@@ -122,37 +121,6 @@ public final class MoistBot {
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
-    }
-
-    /**
-     * Executes the event command to add a new event task.
-     *
-     * @param description The description of the event
-     * @param from The start time of the event
-     * @param to The end time of the event
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task cannot be added or saved
-     */
-    private boolean executeEvent(String description, String from, String to) throws MoistBotException {
-        return executeAddTask(taskManager.addEvent(description, from, to));
-    }
-
-    /**
-     * Displays feedback after a task is added.
-     *
-     * @param task The added task
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the updated task list cannot be saved
-     */
-    private boolean executeAddTask(Task task) throws MoistBotException {
-        try {
-            storage.saveTasks(taskManager);
-        } catch (MoistBotException e) {
-            taskManager.removeLastTask();
-            throw e;
-        }
-        ui.printAddTask(task, taskManager.getSize());
-        return false;
     }
 
     /**
