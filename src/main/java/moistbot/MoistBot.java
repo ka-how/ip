@@ -8,8 +8,6 @@ import moistbot.task.Task;
 import moistbot.task.TaskManager;
 import moistbot.ui.UserInterface;
 
-import java.util.Scanner;
-
 /**
  * MoistBot is a simple console-based task tracker application that teaches Java fundamentals.
  * The application accepts commands such as adding, listing, marking, unmarking, and deleting tasks.
@@ -23,6 +21,9 @@ public final class MoistBot {
     /** The in-memory tasks owned by this application instance. */
     private final TaskManager taskManager;
 
+    /** The console interface owned by this application instance. */
+    private final UserInterface ui;
+
     /**
      * Creates a MoistBot application backed by the specified task data file.
      *
@@ -31,6 +32,7 @@ public final class MoistBot {
     public MoistBot(String filePath) {
         storage = new Storage(filePath);
         taskManager = new TaskManager();
+        ui = new UserInterface();
     }
 
     /**
@@ -48,13 +50,13 @@ public final class MoistBot {
      * application terminates.
      */
     public void run() {
-        UserInterface.printWelcome();
+        ui.printWelcome();
         loadSavedTasks();
 
         boolean isExit = false;
-        try (Scanner in = new Scanner(System.in)) {
-            while (!isExit && in.hasNextLine()) {
-                isExit = processCommand(in.nextLine());
+        try (UserInterface activeUi = ui) {
+            while (!isExit && activeUi.hasNextCommand()) {
+                isExit = processCommand(activeUi.readCommand());
             }
         }
     }
@@ -66,7 +68,7 @@ public final class MoistBot {
         try {
             taskManager.setTasks(storage.loadTasks());
         } catch (MoistBotException e) {
-            UserInterface.printMessage(e.getMessage());
+            ui.printMessage(e.getMessage());
         }
     }
 
@@ -81,10 +83,10 @@ public final class MoistBot {
             Command command = Parser.parseInput(input);
             return execute(command);
         } catch (MoistBotException e) {
-            UserInterface.printMessage(e.getMessage());
+            ui.printMessage(e.getMessage());
             return false;
         } catch (RuntimeException e) {
-            UserInterface.printMessage("My apologies, but I could not process that command because of an unexpected "
+            ui.printMessage("My apologies, but I could not process that command because of an unexpected "
                     + "internal error. Please check the command format and try again. If the matter persists, "
                     + "please restart MoistBot.");
             return false;
@@ -129,8 +131,8 @@ public final class MoistBot {
      *
      * @return Always returns true to signal application exit
      */
-    private static boolean executeBye() {
-        UserInterface.printExit();
+    private boolean executeBye() {
+        ui.printExit();
         return true;
     }
 
@@ -140,7 +142,7 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      */
     private boolean executeList() {
-        UserInterface.printTasks(taskManager);
+        ui.printTasks(taskManager);
         return false;
     }
 
@@ -194,7 +196,7 @@ public final class MoistBot {
             taskManager.removeLastTask();
             throw e;
         }
-        UserInterface.printAddTask(task, taskManager.getSize());
+        ui.printAddTask(task, taskManager.getSize());
         return false;
     }
 
@@ -211,7 +213,7 @@ public final class MoistBot {
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(true);
         saveCompletionChange(task, wasCompleted);
-        UserInterface.printMarkTask(task);
+        ui.printMarkTask(task);
         return false;
     }
 
@@ -228,7 +230,7 @@ public final class MoistBot {
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(false);
         saveCompletionChange(task, wasCompleted);
-        UserInterface.printUnmarkTask(task);
+        ui.printUnmarkTask(task);
         return false;
     }
 
@@ -249,7 +251,7 @@ public final class MoistBot {
             taskManager.restoreTask(deleteIndex, deletedTask);
             throw e;
         }
-        UserInterface.printDeleteTask(deletedTask, taskManager.getSize());
+        ui.printDeleteTask(deletedTask, taskManager.getSize());
         return false;
     }
 

@@ -3,12 +3,14 @@ package moistbot.ui;
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
 
+import java.util.Scanner;
+
 /**
- * Handles all user interface output and formatting for the task manager application.
- * Provides methods to display welcome messages, task lists, and confirmations
+ * Handles console input, output, and formatting for the task manager application.
+ * Provides methods to read commands and display task lists and confirmations
  * with formatted output using visual dividers for better readability.
  */
-public final class UserInterface {
+public final class UserInterface implements AutoCloseable {
     private static final String BANNER = " __  __   ___   ___ ____ _____ ____   ___ _____\n"
             + "|  \\/  | / _ \\ |_ _|/ ___|_   _| __ ) / _ \\|_   _|\n"
             + "| |\\/| || | | | | | \\___ \\ | | |  _ \\| | | | | |\n"
@@ -16,17 +18,39 @@ public final class UserInterface {
             + "|_|  |_| \\___/ |___||____/ |_| |____/ \\___/  |_|";
     private static final String DIVIDER = "____________________________________________________________";
 
+    /** Reads commands from the console for the lifetime of this user interface. */
+    private final Scanner inputScanner;
+
     /**
-     * Prevents instantiation because all console output operations are stateless.
+     * Creates a user interface connected to the process console.
      */
-    private UserInterface() {
+    public UserInterface() {
+        inputScanner = new Scanner(System.in);
+    }
+
+    /**
+     * Returns whether another console command is available to read.
+     *
+     * @return True if another command can be read
+     */
+    public boolean hasNextCommand() {
+        return inputScanner.hasNextLine();
+    }
+
+    /**
+     * Reads the next command entered through the console.
+     *
+     * @return The next command line
+     */
+    public String readCommand() {
+        return inputScanner.nextLine();
     }
 
     /**
      * Displays the welcome message with the application banner and greeting.
      * Called when the application starts to introduce the user to MoistBot.
      */
-    public static void printWelcome() {
+    public void printWelcome() {
         System.out.println(DIVIDER);
         System.out.println(BANNER);
         System.out.println("Good day. I am MoistBot, at your service.");
@@ -37,7 +61,7 @@ public final class UserInterface {
     /**
      * Displays the exit message when the user quits the application.
      */
-    public static void printExit() {
+    public void printExit() {
         printMessage("Thank you for using MoistBot. Have a pleasant day.");
     }
 
@@ -48,7 +72,7 @@ public final class UserInterface {
      * @param task The task that was added
      * @param size The updated total number of tasks in the list
      */
-    public static void printAddTask(Task task, int size) {
+    public void printAddTask(Task task, int size) {
         String header = "Certainly. I have added this task:";
         printMessage(header + "\n" + formatModifyTask(task, size));
     }
@@ -58,7 +82,7 @@ public final class UserInterface {
      *
      * @param task The task that was marked as complete
      */
-    public static void printMarkTask(Task task) {
+    public void printMarkTask(Task task) {
         String header = "Certainly. I have marked this task as complete:";
         printMessage(header + "\n" + formatTaskDetails(task));
     }
@@ -68,7 +92,7 @@ public final class UserInterface {
      *
      * @param task The task that was marked as incomplete
      */
-    public static void printUnmarkTask(Task task) {
+    public void printUnmarkTask(Task task) {
         String header = "Certainly. I have marked this task as incomplete:";
         printMessage(header + "\n" + formatTaskDetails(task));
     }
@@ -79,7 +103,7 @@ public final class UserInterface {
      * @param task The task that was deleted
      * @param size The updated total number of tasks in the list
      */
-    public static void printDeleteTask(Task task, int size) {
+    public void printDeleteTask(Task task, int size) {
         String header = "Certainly. I have deleted this task:";
         printMessage(header + "\n" + formatModifyTask(task, size));
     }
@@ -92,7 +116,7 @@ public final class UserInterface {
      * @param size The updated total number of tasks in the list
      * @return A formatted string with task details and task count
      */
-    public static String formatModifyTask(Task task, int size) {
+    public String formatModifyTask(Task task, int size) {
         String taskNoun = size == 1 ? "task" : "tasks";
         String ending = "Your list now contains " + size + " " + taskNoun + ".";
         return formatTaskDetails(task) + "\n" + ending;
@@ -103,7 +127,7 @@ public final class UserInterface {
      *
      * @param message The message to display
      */
-    public static void printMessage(String message) {
+    public void printMessage(String message) {
         System.out.println(DIVIDER);
         System.out.println(message);
         System.out.println(DIVIDER);
@@ -116,7 +140,7 @@ public final class UserInterface {
      *
      * @param taskManager The task list to display
      */
-    public static void printTasks(TaskManager taskManager) {
+    public void printTasks(TaskManager taskManager) {
         System.out.println(DIVIDER);
         System.out.println("Certainly. Here is your task list:");
 
@@ -141,9 +165,17 @@ public final class UserInterface {
      * @param task The task to format
      * @return A formatted string representation of the task
      */
-    public static String formatTaskDetails(Task task) {
+    public String formatTaskDetails(Task task) {
         char cross = task.isCompleted() ? 'X' : ' ';
         char taskType = task.getTaskType();
         return "[" + taskType + "][" + cross + "] " + task;
+    }
+
+    /**
+     * Releases the console input scanner when the application finishes.
+     */
+    @Override
+    public void close() {
+        inputScanner.close();
     }
 }
