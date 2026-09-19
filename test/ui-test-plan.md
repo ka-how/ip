@@ -124,16 +124,17 @@ Expected output:
 Please enter a command, such as 'list' or 'todo buy milk'.
 ```
 
-## Test case 9: arguments for argument-free commands
+## Test case 9: list date validation and argument-free commands
 
-Aim: Confirm that `list` and `bye` reject extra text politely.
+Aim: Confirm that `list` rejects an invalid date and `bye` rejects extra text
+politely.
 
 Inputs: `list now`, `bye now`, `list`, `bye`
 
 Expected output:
 
 ```text
-The 'list' command does not accept arguments. Please enter only 'list'.
+Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example 'list 2019-12-03'.
 The 'bye' command does not accept arguments. Please enter only 'bye'.
 ```
 
@@ -295,3 +296,29 @@ Inputs: `todo task 1` through `todo task 101`, `list`, `bye`.
 
 Expected output: All 101 additions succeed and report the updated count. The
 final list contains tasks 1 through 101 with no capacity error.
+
+## Test case 18: list deadlines and events by date
+
+Aim: Confirm that `list <date>` displays only deadlines due and events starting
+on or before the inclusive cutoff while retaining their original task numbers.
+
+Inputs: Add one todo, deadlines before, on, and after 3 December 2019, and
+events starting before, on, and after that date. Enter `list 3/12/2019`, then
+`list 2019-11-30`, and `bye`.
+
+Expected output:
+
+```text
+Certainly. Here are your deadlines and events on or before Dec 03 2019:
+2.[D][ ] early deadline (by: Dec 01 2019)
+3.[D][ ] cutoff deadline (by: Dec 03 2019, 6:00 PM)
+5.[E][ ] ongoing event (from: Dec 02 2019 to: Dec 05 2019)
+6.[E][ ] cutoff event (from: Dec 03 2019, 9:00 AM to: Dec 03 2019, 10:00 AM)
+```
+
+The todo and later dated tasks are omitted. The earlier cutoff produces:
+
+```text
+Certainly. Here are your deadlines and events on or before Nov 30 2019:
+There are no deadlines or events on or before Nov 30 2019. Please enter another date or use 'list' to view all tasks.
+```

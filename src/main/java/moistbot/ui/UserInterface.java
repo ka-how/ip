@@ -2,7 +2,9 @@ package moistbot.ui;
 
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
+import moistbot.util.DateTimeUtil;
 
+import java.time.LocalDate;
 import java.util.Scanner;
 
 /**
@@ -154,6 +156,33 @@ public final class UserInterface implements AutoCloseable {
             System.out.println(formatTaskDetails(taskManager.getTask(i + 1)));
         }
 
+        System.out.println(DIVIDER);
+    }
+
+    /**
+     * Displays deadlines due and events starting on or before an inclusive date.
+     * Original task numbers are retained so subsequent task commands remain intuitive.
+     *
+     * @param taskManager The task list to filter and display
+     * @param cutoffDate The inclusive date limit
+     */
+    public void printTasksOnOrBefore(TaskManager taskManager, LocalDate cutoffDate) {
+        String formattedDate = DateTimeUtil.formatForDisplay(cutoffDate, null);
+        System.out.println(DIVIDER);
+        System.out.println("Certainly. Here are your deadlines and events on or before " + formattedDate + ":");
+
+        boolean hasMatchingTask = false;
+        for (int taskNumber = 1; taskNumber <= taskManager.getSize(); taskNumber++) {
+            Task task = taskManager.getTask(taskNumber);
+            if (task.isDatedOnOrBefore(cutoffDate)) {
+                System.out.println(taskNumber + "." + formatTaskDetails(task));
+                hasMatchingTask = true;
+            }
+        }
+        if (!hasMatchingTask) {
+            System.out.println("There are no deadlines or events on or before " + formattedDate
+                    + ". Please enter another date or use 'list' to view all tasks.");
+        }
         System.out.println(DIVIDER);
     }
 

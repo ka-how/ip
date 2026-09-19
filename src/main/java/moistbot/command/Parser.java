@@ -3,6 +3,7 @@ package moistbot.command;
 import moistbot.exception.MoistBotException;
 import moistbot.util.DateTimeUtil;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 /**
@@ -77,7 +78,7 @@ public final class Parser {
             case "bye":
                 return parseCommandWithoutArguments("bye", inputArray);
             case "list":
-                return parseCommandWithoutArguments("list", inputArray);
+                return parseList(inputArray);
             case "mark":
                 return parseTaskNumber("mark", inputArray);
             case "unmark":
@@ -113,6 +114,22 @@ public final class Parser {
             return new ExitCommand();
         }
         return new ListCommand();
+    }
+
+    /**
+     * Parses an unfiltered list command or one with an inclusive cutoff date.
+     */
+    private static Command parseList(String[] inputArray) throws MoistBotException {
+        if (inputArray.length == 1) {
+            return new ListCommand();
+        }
+        try {
+            LocalDate cutoffDate = DateTimeUtil.parseDate(inputArray[1]);
+            return new ListCommand(cutoffDate);
+        } catch (DateTimeParseException e) {
+            throw new MoistBotException("Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example "
+                    + "'list 2019-12-03'.");
+        }
     }
 
     /**

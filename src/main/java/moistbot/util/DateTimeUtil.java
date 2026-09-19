@@ -71,11 +71,18 @@ public final class DateTimeUtil {
         return result;
     }
 
-    private static LocalDate parseDate(String input) {
+    /**
+     * Parses a date in either supported input format without accepting a time.
+     *
+     * @param input Date text such as {@code 2019-12-02} or {@code 2/12/2019}
+     * @return The parsed date
+     * @throws DateTimeParseException if the input is not a valid supported date
+     */
+    public static LocalDate parseDate(String input) throws DateTimeParseException {
         try {
-            return LocalDate.parse(input, ISO_DATE_FORMAT);
+            return LocalDate.parse(input.trim(), ISO_DATE_FORMAT);
         } catch (DateTimeParseException e) {
-            return LocalDate.parse(input, DAY_FIRST_DATE_FORMAT);
+            return LocalDate.parse(input.trim(), DAY_FIRST_DATE_FORMAT);
         }
     }
 

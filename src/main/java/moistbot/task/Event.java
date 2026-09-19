@@ -70,6 +70,17 @@ public class Event extends Task {
     }
 
     /**
+     * Returns whether this event starts by the inclusive cutoff date.
+     *
+     * @param cutoffDate The inclusive date limit
+     * @return True if the event starts on or before the cutoff
+     */
+    @Override
+    public boolean isDatedOnOrBefore(LocalDate cutoffDate) {
+        return !startDate.isAfter(cutoffDate);
+    }
+
+    /**
      * Returns a string representation of the event task.
      * Appends the time period in the format {@code (from: <start> to: <end>)} to the task description.
      *

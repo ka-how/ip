@@ -207,8 +207,8 @@ $cases = @(
         "Certainly. Here is your task list:`n1.[T][ ] read book", $exitMessage) },
     @{ Name = 'blank input is handled as a chatbot error'; Commands = @('', 'bye'); Messages = @(
         "Please enter a command, such as 'list' or 'todo buy milk'.", $exitMessage) },
-    @{ Name = 'argument-free commands reject extra text'; Commands = @('list now', 'bye now', 'list', 'bye'); Messages = @(
-        "The 'list' command does not accept arguments. Please enter only 'list'.",
+    @{ Name = 'list validates dates and bye rejects arguments'; Commands = @('list now', 'bye now', 'list', 'bye'); Messages = @(
+        "Please enter a valid list date as yyyy-MM-dd or d/M/yyyy, for example 'list 2019-12-03'.",
         "The 'bye' command does not accept arguments. Please enter only 'bye'.",
         "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) },
     @{ Name = 'delete removes a task and renumbers the list'; Commands = @(
@@ -231,6 +231,32 @@ $cases = @(
         "My apologies, but '1 extra' is not a valid task number. Please enter one whole number, for example 'delete 1'.",
         "Certainly. Here is your task list:`n1.[T][ ] read book", $exitMessage) }
 )
+
+$cases += @{
+    Name = 'list filters deadlines and events by date'
+    Commands = @(
+        'todo undated task',
+        'deadline early deadline /by 2019-12-01',
+        'deadline cutoff deadline /by 3/12/2019 1800',
+        'deadline later deadline /by 2019-12-04',
+        'event ongoing event /from 2019-12-02 /to 2019-12-05',
+        'event cutoff event /from 2019-12-03 0900 /to 2019-12-03 1000',
+        'event later event /from 2019-12-04 /to 2019-12-05',
+        'list 3/12/2019',
+        'list 2019-11-30',
+        'bye')
+    Messages = @(
+        "Certainly. I have added this task:`n[T][ ] undated task`nYour list now contains 1 task.",
+        "Certainly. I have added this task:`n[D][ ] early deadline (by: Dec 01 2019)`nYour list now contains 2 tasks.",
+        "Certainly. I have added this task:`n[D][ ] cutoff deadline (by: Dec 03 2019, 6:00 PM)`nYour list now contains 3 tasks.",
+        "Certainly. I have added this task:`n[D][ ] later deadline (by: Dec 04 2019)`nYour list now contains 4 tasks.",
+        "Certainly. I have added this task:`n[E][ ] ongoing event (from: Dec 02 2019 to: Dec 05 2019)`nYour list now contains 5 tasks.",
+        "Certainly. I have added this task:`n[E][ ] cutoff event (from: Dec 03 2019, 9:00 AM to: Dec 03 2019, 10:00 AM)`nYour list now contains 6 tasks.",
+        "Certainly. I have added this task:`n[E][ ] later event (from: Dec 04 2019 to: Dec 05 2019)`nYour list now contains 7 tasks.",
+        "Certainly. Here are your deadlines and events on or before Dec 03 2019:`n2.[D][ ] early deadline (by: Dec 01 2019)`n3.[D][ ] cutoff deadline (by: Dec 03 2019, 6:00 PM)`n5.[E][ ] ongoing event (from: Dec 02 2019 to: Dec 05 2019)`n6.[E][ ] cutoff event (from: Dec 03 2019, 9:00 AM to: Dec 03 2019, 10:00 AM)",
+        "Certainly. Here are your deadlines and events on or before Nov 30 2019:`nThere are no deadlines or events on or before Nov 30 2019. Please enter another date or use 'list' to view all tasks.",
+        $exitMessage)
+}
 
 $storageCommands = @(
     'todo read book', 'deadline return book /by 2/12/2019 1800',

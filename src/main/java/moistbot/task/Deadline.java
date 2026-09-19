@@ -45,6 +45,17 @@ public class Deadline extends Task {
     }
 
     /**
+     * Returns whether this deadline is due by the inclusive cutoff date.
+     *
+     * @param cutoffDate The inclusive date limit
+     * @return True if the deadline is due on or before the cutoff
+     */
+    @Override
+    public boolean isDatedOnOrBefore(LocalDate cutoffDate) {
+        return !deadlineDate.isAfter(cutoffDate);
+    }
+
+    /**
      * Returns a string representation of the deadline task.
      * Appends the deadline in the format {@code (by: <deadline>)} to the base task description.
      *
