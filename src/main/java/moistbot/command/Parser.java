@@ -152,7 +152,7 @@ public final class Parser {
             throw new MoistBotException("Please provide a description for the todo task. Usage: todo <description>, "
                     + "for example 'todo buy milk'.");
         }
-        return new Command(Command.CommandType.TODO, inputArray[1].trim());
+        return new TodoCommand(inputArray[1].trim());
     }
 
     /**

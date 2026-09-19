@@ -107,10 +107,9 @@ public final class MoistBot {
         switch (commandType) {
             case BYE:
             case LIST:
+            case TODO:
                 command.execute(taskManager, ui, storage);
                 return command.isExit();
-            case TODO:
-                return executeTodo(command.getDescription());
             case DEADLINE:
                 return executeDeadline(command.getDescription(), command.getTo());
             case EVENT:
@@ -124,17 +123,6 @@ public final class MoistBot {
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
-    }
-
-    /**
-     * Executes the todo command to add a new todo task.
-     *
-     * @param description The description of the todo task
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task cannot be added or saved
-     */
-    private boolean executeTodo(String description) throws MoistBotException {
-        return executeAddTask(taskManager.addTodo(description));
     }
 
     /**
