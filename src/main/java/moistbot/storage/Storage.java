@@ -22,12 +22,17 @@ import java.util.List;
  */
 public final class Storage {
     private static final String FIELD_SEPARATOR = " | ";
-    private static final Path DATA_FILE = Path.of("data", "moistbot.txt");
+
+    /** The task data file used by this storage instance. */
+    private final Path dataFile;
 
     /**
-     * Prevents instantiation because storage operations do not require object state.
+     * Creates a storage service that reads and writes tasks at the specified path.
+     *
+     * @param filePath The path of the task data file
      */
-    private Storage() {
+    public Storage(String filePath) {
+        dataFile = Path.of(filePath);
     }
 
     /**
@@ -37,10 +42,10 @@ public final class Storage {
      * @return The complete list of tasks restored from storage
      * @throws MoistBotException if the file cannot be read or contains invalid task data
      */
-    public static List<Task> loadTasks() throws MoistBotException {
+    public List<Task> loadTasks() throws MoistBotException {
         List<String> taskLines;
         try {
-            taskLines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
+            taskLines = Files.readAllLines(dataFile, StandardCharsets.UTF_8);
         } catch (NoSuchFileException e) {
             return new ArrayList<>();
         } catch (IOException | SecurityException e) {
@@ -69,13 +74,13 @@ public final class Storage {
      * @param taskManager The task list whose current contents should be saved
      * @throws MoistBotException if the data directory or file cannot be written
      */
-    public static void saveTasks(TaskManager taskManager) throws MoistBotException {
+    public void saveTasks(TaskManager taskManager) throws MoistBotException {
         List<String> taskLines = new ArrayList<>();
         for (int taskNumber = 1; taskNumber <= taskManager.getSize(); taskNumber++) {
             taskLines.add(formatTask(taskManager.getTask(taskNumber)));
         }
 
-        Path dataDirectory = DATA_FILE.getParent();
+        Path dataDirectory = dataFile.toAbsolutePath().getParent();
         Path temporaryFile = null;
         try {
             Files.createDirectories(dataDirectory);
@@ -222,12 +227,12 @@ public final class Storage {
     /**
      * Replaces the save file atomically when supported by the host file system.
      */
-    private static void replaceDataFile(Path temporaryFile) throws IOException {
+    private void replaceDataFile(Path temporaryFile) throws IOException {
         try {
-            Files.move(temporaryFile, DATA_FILE, StandardCopyOption.ATOMIC_MOVE,
+            Files.move(temporaryFile, dataFile, StandardCopyOption.ATOMIC_MOVE,
                     StandardCopyOption.REPLACE_EXISTING);
         } catch (AtomicMoveNotSupportedException e) {
-            Files.move(temporaryFile, DATA_FILE, StandardCopyOption.REPLACE_EXISTING);
+            Files.move(temporaryFile, dataFile, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

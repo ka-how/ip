@@ -17,13 +17,19 @@ import java.util.Scanner;
  * for clarity, maintainability, and easier testing.
  */
 public final class MoistBot {
+    /** The persistence service configured for this application instance. */
+    private final Storage storage;
+
     /** The in-memory tasks owned by this application instance. */
     private final TaskManager taskManager;
 
     /**
-     * Creates a MoistBot application with its own in-memory task list.
+     * Creates a MoistBot application backed by the specified task data file.
+     *
+     * @param filePath The path used to load and save tasks
      */
-    public MoistBot() {
+    public MoistBot(String filePath) {
+        storage = new Storage(filePath);
         taskManager = new TaskManager();
     }
 
@@ -33,7 +39,7 @@ public final class MoistBot {
      * @param args Command-line arguments (not used by this application)
      */
     public static void main(String[] args) {
-        new MoistBot().run();
+        new MoistBot("data/moistbot.txt").run();
     }
 
     /**
@@ -58,7 +64,7 @@ public final class MoistBot {
      */
     private void loadSavedTasks() {
         try {
-            taskManager.setTasks(Storage.loadTasks());
+            taskManager.setTasks(storage.loadTasks());
         } catch (MoistBotException e) {
             UserInterface.printMessage(e.getMessage());
         }
@@ -183,7 +189,7 @@ public final class MoistBot {
      */
     private boolean executeAddTask(Task task) throws MoistBotException {
         try {
-            Storage.saveTasks(taskManager);
+            storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
             taskManager.removeLastTask();
             throw e;
@@ -238,7 +244,7 @@ public final class MoistBot {
         Task deletedTask = taskManager.getExistingTask(deleteIndex, "delete");
         taskManager.deleteTask(deleteIndex);
         try {
-            Storage.saveTasks(taskManager);
+            storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
             taskManager.restoreTask(deleteIndex, deletedTask);
             throw e;
@@ -252,7 +258,7 @@ public final class MoistBot {
      */
     private void saveCompletionChange(Task task, boolean wasCompleted) throws MoistBotException {
         try {
-            Storage.saveTasks(taskManager);
+            storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
             task.setCompleted(wasCompleted);
             throw e;
