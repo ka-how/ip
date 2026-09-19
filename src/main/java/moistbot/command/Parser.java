@@ -1,6 +1,9 @@
 package moistbot.command;
 
 import moistbot.exception.MoistBotException;
+import moistbot.util.DateTimeUtil;
+
+import java.time.format.DateTimeParseException;
 
 /**
  * Parses raw user input into a {@link Command} object understood by MoistBot.
@@ -8,7 +11,7 @@ import moistbot.exception.MoistBotException;
  * required arguments before constructing the corresponding command object.
  */
 public final class Parser {
-    private static final String DEADLINE_USAGE = "deadline <desc> /by <time>";
+    private static final String DEADLINE_USAGE = "deadline <desc> /by <yyyy-MM-dd> [HHmm]";
     private static final String EVENT_USAGE = "event <desc> /from <time> /to <time>";
     private static final String DEADLINE_SEPARATOR = "/by";
     private static final String EVENT_FROM_SEPARATOR = "/from";
@@ -181,7 +184,7 @@ public final class Parser {
     private static Command parseDeadlineCommand(String[] inputArray) throws MoistBotException {
         if (inputArray.length < 2 || inputArray[1].trim().isEmpty()) {
             throw new MoistBotException("Please provide a deadline description and time. Usage: " + DEADLINE_USAGE
-                    + ", for example 'deadline return book /by Friday'.");
+                    + ", for example 'deadline return book /by 2019-12-02 1800'.");
         }
         return parseDeadline(inputArray[1]);
     }
@@ -231,7 +234,13 @@ public final class Parser {
             throw new MoistBotException("Please provide a deadline time after '/by'. Usage: " + DEADLINE_USAGE + ".");
         }
 
-        return new DeadlineCommand(description, by);
+        try {
+            DateTimeUtil.ParsedDateTime deadline = DateTimeUtil.parse(by);
+            return new DeadlineCommand(description, deadline.date(), deadline.time());
+        } catch (DateTimeParseException e) {
+            throw new MoistBotException("Please enter a valid deadline as yyyy-MM-dd or d/M/yyyy, with an "
+                    + "optional 24-hour HHmm time, for example '2019-12-02 1800'.");
+        }
     }
 
     /**

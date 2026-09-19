@@ -6,6 +6,7 @@ import moistbot.task.Event;
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
 import moistbot.task.Todo;
+import moistbot.util.DateTimeUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,7 +115,8 @@ public final class Storage {
                 if (!(task instanceof Deadline deadline)) {
                     throw unsupportedTaskException();
                 }
-                return commonFields + FIELD_SEPARATOR + escapeField(deadline.getDeadline());
+                return commonFields + FIELD_SEPARATOR + escapeField(DateTimeUtil.formatForStorage(
+                        deadline.getDeadlineDate(), deadline.getDeadlineTime()));
             case Task.TYPE_EVENT:
                 if (!(task instanceof Event event)) {
                     throw unsupportedTaskException();
@@ -150,7 +153,7 @@ public final class Storage {
         if (fields.length == 3 && "T".equals(fields[0])) {
             task = new Todo(description);
         } else if (fields.length == 4 && "D".equals(fields[0])) {
-            task = new Deadline(description, fields[3]);
+            task = parseDeadline(description, fields[3], lineNumber);
         } else if (fields.length == 5 && "E".equals(fields[0])) {
             task = new Event(description, fields[3], fields[4]);
         } else {
@@ -162,6 +165,19 @@ public final class Storage {
         }
         task.setCompleted(isCompleted);
         return task;
+    }
+
+    /**
+     * Restores a deadline while ensuring saved date-time data is valid.
+     */
+    private static Deadline parseDeadline(String description, String storedDeadline, int lineNumber)
+            throws MoistBotException {
+        try {
+            DateTimeUtil.ParsedDateTime deadline = DateTimeUtil.parse(storedDeadline);
+            return new Deadline(description, deadline.date(), deadline.time());
+        } catch (DateTimeParseException e) {
+            throw invalidDataException(lineNumber);
+        }
     }
 
     /**

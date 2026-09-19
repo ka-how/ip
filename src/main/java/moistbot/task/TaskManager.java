@@ -4,6 +4,8 @@ import moistbot.exception.MoistBotException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 /**
  * Manages a dynamically sized list of tasks stored in memory.
@@ -32,11 +34,12 @@ public final class TaskManager {
      * Adds a new deadline task to the task list.
      *
      * @param description The description of the deadline task
-     * @param by The deadline for the task
+     * @param deadlineDate The deadline date
+     * @param deadlineTime The optional deadline time
      * @return The task that was added
      */
-    public Task addDeadline(String description, String by) {
-        return addTask(new Deadline(description, by));
+    public Task addDeadline(String description, LocalDate deadlineDate, LocalTime deadlineTime) {
+        return addTask(new Deadline(description, deadlineDate, deadlineTime));
     }
 
     /**

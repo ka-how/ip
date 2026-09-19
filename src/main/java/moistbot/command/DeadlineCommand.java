@@ -3,21 +3,27 @@ package moistbot.command;
 import moistbot.task.Task;
 import moistbot.task.TaskManager;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 /**
  * Adds a task with a deadline to the task list.
  */
 public final class DeadlineCommand extends AddCommand {
-    private final String by;
+    private final LocalDate deadlineDate;
+    private final LocalTime deadlineTime;
 
     /**
      * Creates a deadline command for the supplied description and deadline.
      *
      * @param description The deadline task description
-     * @param by The deadline in its user-entered form
+     * @param deadlineDate The deadline date
+     * @param deadlineTime The optional deadline time
      */
-    public DeadlineCommand(String description, String by) {
+    public DeadlineCommand(String description, LocalDate deadlineDate, LocalTime deadlineTime) {
         super(description);
-        this.by = by;
+        this.deadlineDate = deadlineDate;
+        this.deadlineTime = deadlineTime;
     }
 
     /**
@@ -28,6 +34,6 @@ public final class DeadlineCommand extends AddCommand {
      */
     @Override
     protected Task createTask(TaskManager tasks) {
-        return tasks.addDeadline(getDescription(), by);
+        return tasks.addDeadline(getDescription(), deadlineDate, deadlineTime);
     }
 }
