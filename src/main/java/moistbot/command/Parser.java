@@ -110,6 +110,9 @@ public final class Parser {
         if (commandType == Command.CommandType.BYE) {
             return new ExitCommand();
         }
+        if (commandType == Command.CommandType.LIST) {
+            return new ListCommand();
+        }
         return new Command(commandType, null);
     }
 

@@ -106,10 +106,9 @@ public final class MoistBot {
 
         switch (commandType) {
             case BYE:
+            case LIST:
                 command.execute(taskManager, ui, storage);
                 return command.isExit();
-            case LIST:
-                return executeList();
             case TODO:
                 return executeTodo(command.getDescription());
             case DEADLINE:
@@ -125,16 +124,6 @@ public final class MoistBot {
             default:
                 throw new MoistBotException("My apologies, but that command is not supported.");
         }
-    }
-
-    /**
-     * Executes the list command to display all tasks.
-     *
-     * @return Always returns false to continue execution
-     */
-    private boolean executeList() {
-        ui.printTasks(taskManager);
-        return false;
     }
 
     /**
