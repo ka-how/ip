@@ -193,7 +193,7 @@ public final class MoistBot {
      */
     private static boolean executeMark(String description) throws MoistBotException {
         int markIndex = Integer.parseInt(description);
-        Task task = getExistingTask(markIndex, "mark");
+        Task task = TaskManager.getExistingTask(markIndex, "mark");
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(true);
         saveCompletionChange(task, wasCompleted);
@@ -210,7 +210,7 @@ public final class MoistBot {
      */
     private static boolean executeUnmark(String description) throws MoistBotException {
         int unmarkIndex = Integer.parseInt(description);
-        Task task = getExistingTask(unmarkIndex, "unmark");
+        Task task = TaskManager.getExistingTask(unmarkIndex, "unmark");
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(false);
         saveCompletionChange(task, wasCompleted);
@@ -227,7 +227,7 @@ public final class MoistBot {
      */
     private static boolean executeDelete(String description) throws MoistBotException {
         int deleteIndex = Integer.parseInt(description);
-        Task deletedTask = getExistingTask(deleteIndex, "delete");
+        Task deletedTask = TaskManager.getExistingTask(deleteIndex, "delete");
         TaskManager.deleteTask(deleteIndex);
         try {
             Storage.saveTasks();
@@ -251,29 +251,4 @@ public final class MoistBot {
         }
     }
 
-    /**
-     * Retrieves a task and explains how to correct an invalid task number.
-     *
-     * @param taskNumber The 1-based number supplied by the user
-     * @param commandName The command being executed
-     * @return The task identified by the supplied number
-     * @throws MoistBotException if the task number does not identify an existing task
-     */
-    private static Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
-        int taskCount = TaskManager.getSize();
-        if (taskCount == 0) {
-            throw new MoistBotException("My apologies, but I cannot " + commandName
-                    + " a task because your task list is empty. Please add a task first, then use '"
-                    + commandName + " <task number>'.");
-        }
-        if (taskNumber < 1) {
-            throw new MoistBotException("Please provide a task number of at least 1. Use 'list' to view the "
-                    + "available task numbers.");
-        }
-        if (taskNumber > taskCount) {
-            throw new MoistBotException("My apologies, but task " + taskNumber + " does not exist. Please choose a "
-                    + "number from 1 to " + taskCount + ". Use 'list' to view the tasks.");
-        }
-        return TaskManager.getTask(taskNumber);
-    }
 }
