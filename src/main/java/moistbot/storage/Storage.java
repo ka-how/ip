@@ -34,14 +34,15 @@ public final class Storage {
      * Restores tasks from the data file when it exists.
      * A missing file represents a new user and therefore starts with an empty list.
      *
+     * @return The complete list of tasks restored from storage
      * @throws MoistBotException if the file cannot be read or contains invalid task data
      */
-    public static void loadTasks() throws MoistBotException {
+    public static List<Task> loadTasks() throws MoistBotException {
         List<String> taskLines;
         try {
             taskLines = Files.readAllLines(DATA_FILE, StandardCharsets.UTF_8);
         } catch (NoSuchFileException e) {
-            return;
+            return new ArrayList<>();
         } catch (IOException | SecurityException e) {
             throw new MoistBotException("My apologies, but I could not read your saved task list. Please check "
                     + "that the save file is readable, then restart MoistBot.");
@@ -59,18 +60,19 @@ public final class Storage {
             tasks.add(parseTask(taskLine, lineNumber));
         }
 
-        TaskManager.setTasks(tasks);
+        return tasks;
     }
 
     /**
      * Writes the complete current task list, replacing the previous saved copy.
      *
+     * @param taskManager The task list whose current contents should be saved
      * @throws MoistBotException if the data directory or file cannot be written
      */
-    public static void saveTasks() throws MoistBotException {
+    public static void saveTasks(TaskManager taskManager) throws MoistBotException {
         List<String> taskLines = new ArrayList<>();
-        for (int taskNumber = 1; taskNumber <= TaskManager.getSize(); taskNumber++) {
-            taskLines.add(formatTask(TaskManager.getTask(taskNumber)));
+        for (int taskNumber = 1; taskNumber <= taskManager.getSize(); taskNumber++) {
+            taskLines.add(formatTask(taskManager.getTask(taskNumber)));
         }
 
         Path dataDirectory = DATA_FILE.getParent();

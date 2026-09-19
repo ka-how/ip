@@ -6,16 +6,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Manages a shared, dynamically sized list of tasks stored in memory.
+ * Manages a dynamically sized list of tasks stored in memory.
  * Provides functionality to add, retrieve, and delete tasks.
  */
 public final class TaskManager {
-    private static final ArrayList<Task> TASK_LIST = new ArrayList<>();
+    private final ArrayList<Task> taskList = new ArrayList<>();
 
     /**
-     * Prevents instantiation because the application uses one shared in-memory task list.
+     * Creates an empty task list for one MoistBot application instance.
      */
-    private TaskManager() {
+    public TaskManager() {
     }
 
     /**
@@ -24,7 +24,7 @@ public final class TaskManager {
      * @param description The description of the todo task
      * @return The task that was added
      */
-    public static Task addTodo(String description) {
+    public Task addTodo(String description) {
         return addTask(new Todo(description));
     }
 
@@ -35,7 +35,7 @@ public final class TaskManager {
      * @param by The deadline for the task
      * @return The task that was added
      */
-    public static Task addDeadline(String description, String by) {
+    public Task addDeadline(String description, String by) {
         return addTask(new Deadline(description, by));
     }
 
@@ -47,7 +47,7 @@ public final class TaskManager {
      * @param to The end time of the event
      * @return The task that was added
      */
-    public static Task addEvent(String description, String from, String to) {
+    public Task addEvent(String description, String from, String to) {
         return addTask(new Event(description, from, to));
     }
 
@@ -57,8 +57,8 @@ public final class TaskManager {
      * @param task The task to store
      * @return The task that was stored
      */
-    private static Task addTask(Task task) {
-        TASK_LIST.add(task);
+    private Task addTask(Task task) {
+        taskList.add(task);
         return task;
     }
 
@@ -68,8 +68,8 @@ public final class TaskManager {
      * @param id The 1-based task number
      * @return The task removed from the list
      */
-    public static Task deleteTask(int id) {
-        return TASK_LIST.remove(id - 1);
+    public Task deleteTask(int id) {
+        return taskList.remove(id - 1);
     }
 
     /**
@@ -77,19 +77,19 @@ public final class TaskManager {
      *
      * @param tasks The complete collection of tasks to store
      */
-    public static void setTasks(List<Task> tasks) {
-        TASK_LIST.clear();
-        TASK_LIST.addAll(tasks);
+    public void setTasks(List<Task> tasks) {
+        taskList.clear();
+        taskList.addAll(tasks);
     }
 
     /**
      * Removes the most recently added task when its persistence operation fails.
      */
-    public static void removeLastTask() {
-        if (TASK_LIST.isEmpty()) {
+    public void removeLastTask() {
+        if (taskList.isEmpty()) {
             return;
         }
-        TASK_LIST.remove(TASK_LIST.size() - 1);
+        taskList.remove(taskList.size() - 1);
     }
 
     /**
@@ -98,8 +98,8 @@ public final class TaskManager {
      * @param id The original 1-based task number
      * @param task The task to restore
      */
-    public static void restoreTask(int id, Task task) {
-        TASK_LIST.add(id - 1, task);
+    public void restoreTask(int id, Task task) {
+        taskList.add(id - 1, task);
     }
 
     /**
@@ -109,11 +109,11 @@ public final class TaskManager {
      * @param id The 1-based task index (1 refers to the first task)
      * @return The task at the given index, or null if the index is out of bounds
      */
-    public static Task getTask(int id) {
-        if (id < 1 || id > TASK_LIST.size()) {
+    public Task getTask(int id) {
+        if (id < 1 || id > taskList.size()) {
             return null;
         }
-        return TASK_LIST.get(id - 1);
+        return taskList.get(id - 1);
     }
 
     /**
@@ -124,7 +124,7 @@ public final class TaskManager {
      * @return The task identified by the supplied number
      * @throws MoistBotException if the task number does not identify an existing task
      */
-    public static Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
+    public Task getExistingTask(int taskNumber, String commandName) throws MoistBotException {
         int taskCount = getSize();
         if (taskCount == 0) {
             throw new MoistBotException("My apologies, but I cannot " + commandName
@@ -147,7 +147,7 @@ public final class TaskManager {
      *
      * @return The count of tasks stored in the list
      */
-    public static int getSize() {
-        return TASK_LIST.size();
+    public int getSize() {
+        return taskList.size();
     }
 }

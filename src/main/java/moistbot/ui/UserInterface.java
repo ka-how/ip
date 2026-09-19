@@ -111,21 +111,23 @@ public final class UserInterface {
 
     /**
      * Displays all tasks in the list with 1-based indexing.
-     * Retrieves tasks individually from {@link TaskManager} so that the manager's
+     * Retrieves tasks individually from the supplied {@link TaskManager} so that the manager's
      * underlying storage remains encapsulated.
+     *
+     * @param taskManager The task list to display
      */
-    public static void printTasks() {
+    public static void printTasks(TaskManager taskManager) {
         System.out.println(DIVIDER);
         System.out.println("Certainly. Here is your task list:");
 
-        int size = TaskManager.getSize();
+        int size = taskManager.getSize();
         if (size == 0) {
             System.out.println("Your task list is presently empty. You may use: bye, list, todo, deadline, event, "
                     + "mark, unmark, or delete.");
         }
         for (int i = 0; i < size; i++) {
             System.out.print((i + 1) + ".");
-            System.out.println(formatTaskDetails(TaskManager.getTask(i + 1)));
+            System.out.println(formatTaskDetails(taskManager.getTask(i + 1)));
         }
 
         System.out.println(DIVIDER);

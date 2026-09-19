@@ -17,23 +17,31 @@ import java.util.Scanner;
  * for clarity, maintainability, and easier testing.
  */
 public final class MoistBot {
+    /** The in-memory tasks owned by this application instance. */
+    private final TaskManager taskManager;
+
     /**
-     * Prevents instantiation because the application is started through {@link #main(String[])}.
+     * Creates a MoistBot application with its own in-memory task list.
      */
-    private MoistBot() {
+    public MoistBot() {
+        taskManager = new TaskManager();
     }
 
     /**
      * Entry point of the MoistBot application.
-     * Prints the startup message and delegates interactive command handling to the
-     * execute(Command) method. The bye command prints the shutdown message before exiting.
-     *
-     * The Scanner is scoped to the application lifetime; closing it also closes System.in
-     * when the application terminates.
      *
      * @param args Command-line arguments (not used by this application)
      */
     public static void main(String[] args) {
+        new MoistBot().run();
+    }
+
+    /**
+     * Runs the interactive command loop until the user exits or the input stream closes.
+     * The scanner is scoped to the application lifetime, so System.in is closed when the
+     * application terminates.
+     */
+    public void run() {
         UserInterface.printWelcome();
         loadSavedTasks();
 
@@ -48,9 +56,9 @@ public final class MoistBot {
     /**
      * Loads saved tasks while allowing the application to remain usable if loading fails.
      */
-    private static void loadSavedTasks() {
+    private void loadSavedTasks() {
         try {
-            Storage.loadTasks();
+            taskManager.setTasks(Storage.loadTasks());
         } catch (MoistBotException e) {
             UserInterface.printMessage(e.getMessage());
         }
@@ -62,7 +70,7 @@ public final class MoistBot {
      * @param input the command entered by the user
      * @return whether the command requests the application to exit
      */
-    private static boolean processCommand(String input) {
+    private boolean processCommand(String input) {
         try {
             Command command = Parser.parseInput(input);
             return execute(command);
@@ -85,7 +93,7 @@ public final class MoistBot {
      * @param command The parsed command object to execute
      * @return True if the application should exit, false otherwise
      */
-    private static boolean execute(Command command) throws MoistBotException {
+    private boolean execute(Command command) throws MoistBotException {
         Command.CommandType commandType = command.getCommandType();
 
         switch (commandType) {
@@ -125,8 +133,8 @@ public final class MoistBot {
      *
      * @return Always returns false to continue execution
      */
-    private static boolean executeList() {
-        UserInterface.printTasks();
+    private boolean executeList() {
+        UserInterface.printTasks(taskManager);
         return false;
     }
 
@@ -137,8 +145,8 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task cannot be added or saved
      */
-    private static boolean executeTodo(String description) throws MoistBotException {
-        return executeAddTask(TaskManager.addTodo(description));
+    private boolean executeTodo(String description) throws MoistBotException {
+        return executeAddTask(taskManager.addTodo(description));
     }
 
     /**
@@ -149,8 +157,8 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task cannot be added or saved
      */
-    private static boolean executeDeadline(String description, String by) throws MoistBotException {
-        return executeAddTask(TaskManager.addDeadline(description, by));
+    private boolean executeDeadline(String description, String by) throws MoistBotException {
+        return executeAddTask(taskManager.addDeadline(description, by));
     }
 
     /**
@@ -162,8 +170,8 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task cannot be added or saved
      */
-    private static boolean executeEvent(String description, String from, String to) throws MoistBotException {
-        return executeAddTask(TaskManager.addEvent(description, from, to));
+    private boolean executeEvent(String description, String from, String to) throws MoistBotException {
+        return executeAddTask(taskManager.addEvent(description, from, to));
     }
 
     /**
@@ -173,14 +181,14 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the updated task list cannot be saved
      */
-    private static boolean executeAddTask(Task task) throws MoistBotException {
+    private boolean executeAddTask(Task task) throws MoistBotException {
         try {
-            Storage.saveTasks();
+            Storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
-            TaskManager.removeLastTask();
+            taskManager.removeLastTask();
             throw e;
         }
-        UserInterface.printAddTask(task, TaskManager.getSize());
+        UserInterface.printAddTask(task, taskManager.getSize());
         return false;
     }
 
@@ -191,9 +199,9 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task index is invalid
      */
-    private static boolean executeMark(String description) throws MoistBotException {
+    private boolean executeMark(String description) throws MoistBotException {
         int markIndex = Integer.parseInt(description);
-        Task task = TaskManager.getExistingTask(markIndex, "mark");
+        Task task = taskManager.getExistingTask(markIndex, "mark");
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(true);
         saveCompletionChange(task, wasCompleted);
@@ -208,9 +216,9 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task index is invalid
      */
-    private static boolean executeUnmark(String description) throws MoistBotException {
+    private boolean executeUnmark(String description) throws MoistBotException {
         int unmarkIndex = Integer.parseInt(description);
-        Task task = TaskManager.getExistingTask(unmarkIndex, "unmark");
+        Task task = taskManager.getExistingTask(unmarkIndex, "unmark");
         boolean wasCompleted = task.isCompleted();
         task.setCompleted(false);
         saveCompletionChange(task, wasCompleted);
@@ -225,26 +233,26 @@ public final class MoistBot {
      * @return Always returns false to continue execution
      * @throws MoistBotException if the task index is invalid
      */
-    private static boolean executeDelete(String description) throws MoistBotException {
+    private boolean executeDelete(String description) throws MoistBotException {
         int deleteIndex = Integer.parseInt(description);
-        Task deletedTask = TaskManager.getExistingTask(deleteIndex, "delete");
-        TaskManager.deleteTask(deleteIndex);
+        Task deletedTask = taskManager.getExistingTask(deleteIndex, "delete");
+        taskManager.deleteTask(deleteIndex);
         try {
-            Storage.saveTasks();
+            Storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
-            TaskManager.restoreTask(deleteIndex, deletedTask);
+            taskManager.restoreTask(deleteIndex, deletedTask);
             throw e;
         }
-        UserInterface.printDeleteTask(deletedTask, TaskManager.getSize());
+        UserInterface.printDeleteTask(deletedTask, taskManager.getSize());
         return false;
     }
 
     /**
      * Saves a completion-state change and restores the previous state if persistence fails.
      */
-    private static void saveCompletionChange(Task task, boolean wasCompleted) throws MoistBotException {
+    private void saveCompletionChange(Task task, boolean wasCompleted) throws MoistBotException {
         try {
-            Storage.saveTasks();
+            Storage.saveTasks(taskManager);
         } catch (MoistBotException e) {
             task.setCompleted(wasCompleted);
             throw e;
