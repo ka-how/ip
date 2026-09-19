@@ -14,7 +14,7 @@ $dataFile = Join-Path $dataDir 'moistbot.txt'
 $divider = '____________________________________________________________'
 $welcome = "$divider`n __  __   ___   ___ ____ _____ ____   ___ _____`n|  \/  | / _ \ |_ _|/ ___|_   _| __ ) / _ \|_   _|`n| |\/| || | | | | | \___ \ | | |  _ \| | | | | |`n| |  | || |_| | | |  ___) || | | |_) | |_| | | |`n|_|  |_| \___/ |___||____/ |_| |____/ \___/  |_|`nGood day. I am MoistBot, at your service.`nHow may I assist you today?`n$divider"
 $exitMessage = 'Thank you for using MoistBot. Have a pleasant day.'
-$emptyListMessage = 'Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, unmark, or delete.'
+$emptyListMessage = 'Your task list is presently empty. You may use: bye, list, todo, deadline, event, find, mark, unmark, or delete.'
 
 function Normalize-Output([string]$value) {
     return ($value -replace "`r`n", "`n" -replace "`r", "`n").TrimEnd()
@@ -151,7 +151,7 @@ $cases = @(
         "Certainly. Here is your task list:`n1.[T][ ] read book`n2.[D][X] return book (by: Dec 02 2019, 6:00 PM)`n3.[E][ ] team meeting (from: Dec 03 2019, 2:00 PM to: Dec 03 2019, 4:00 PM)",
         "Certainly. I have marked this task as incomplete:`n[D][ ] return book (by: Dec 02 2019, 6:00 PM)", $exitMessage) },
     @{ Name = 'unrecognised command'; Commands = @('buy groceries today', 'list', 'bye'); Messages = @(
-        "My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.",
+        "My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, find, todo, deadline, event, mark, unmark, and delete.",
         "Certainly. Here is your task list:`n$emptyListMessage", $exitMessage) },
     @{ Name = 'malformed additions explain the required correction'; Commands = @(
         'todo', 'deadline', 'deadline pay bills', 'deadline /by Friday', 'deadline pay bills /by',
@@ -255,6 +255,40 @@ $cases += @{
         "Certainly. I have added this task:`n[E][ ] later event (from: Dec 04 2019 to: Dec 05 2019)`nYour list now contains 7 tasks.",
         "Certainly. Here are your deadlines and events on or before Dec 03 2019:`n2.[D][ ] early deadline (by: Dec 01 2019)`n3.[D][ ] cutoff deadline (by: Dec 03 2019, 6:00 PM)`n5.[E][ ] ongoing event (from: Dec 02 2019 to: Dec 05 2019)`n6.[E][ ] cutoff event (from: Dec 03 2019, 9:00 AM to: Dec 03 2019, 10:00 AM)",
         "Certainly. Here are your deadlines and events on or before Nov 30 2019:`nThere are no deadlines or events on or before Nov 30 2019. Please enter another date or use 'list' to view all tasks.",
+        $exitMessage)
+}
+
+$cases += @{
+    Name = 'find filters tasks by description'
+    Commands = @(
+        'todo read book',
+        'deadline return book /by 2019-06-06',
+        'event book club /from 2019-06-07 /to 2019-06-08',
+        'todo buy milk',
+        'mark 1',
+        'mark 2',
+        'find book',
+        'find Book',
+        'find 2019',
+        'bye')
+    Messages = @(
+        "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
+        "Certainly. I have added this task:`n[D][ ] return book (by: Jun 06 2019)`nYour list now contains 2 tasks.",
+        "Certainly. I have added this task:`n[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)`nYour list now contains 3 tasks.",
+        "Certainly. I have added this task:`n[T][ ] buy milk`nYour list now contains 4 tasks.",
+        "Certainly. I have marked this task as complete:`n[T][X] read book",
+        "Certainly. I have marked this task as complete:`n[D][X] return book (by: Jun 06 2019)",
+        "Certainly. Here are the matching tasks in your list:`n1.[T][X] read book`n2.[D][X] return book (by: Jun 06 2019)`n3.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)",
+        "Certainly. Here are the matching tasks in your list:`nMy apologies, but no task descriptions contain 'Book'. Please try another search term.",
+        "Certainly. Here are the matching tasks in your list:`nMy apologies, but no task descriptions contain '2019'. Please try another search term.",
+        $exitMessage)
+}
+
+$cases += @{
+    Name = 'find requires a search term'
+    Commands = @('find', 'bye')
+    Messages = @(
+        "Please provide text to find. Usage: find <search term>, for example 'find book'.",
         $exitMessage)
 }
 

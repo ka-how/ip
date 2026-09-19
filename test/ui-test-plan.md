@@ -37,7 +37,7 @@ Expected output:
 
 ```text
 Certainly. Here is your task list:
-Your task list is presently empty. You may use: bye, list, todo, deadline, event, mark, unmark, or delete.
+Your task list is presently empty. You may use: bye, list, todo, deadline, event, find, mark, unmark, or delete.
 ```
 
 ## Test case 3: add todo and list
@@ -79,7 +79,7 @@ Inputs: `buy groceries today`, `list`, `bye`
 Expected output:
 
 ```text
-My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, todo, deadline, event, mark, unmark, and delete.
+My apologies, but I do not recognise the command 'buy'. Available commands are: bye, list, find, todo, deadline, event, mark, unmark, and delete.
 ```
 
 The following list remains empty as in test case 2.
@@ -321,4 +321,41 @@ The todo and later dated tasks are omitted. The earlier cutoff produces:
 ```text
 Certainly. Here are your deadlines and events on or before Nov 30 2019:
 There are no deadlines or events on or before Nov 30 2019. Please enter another date or use 'list' to view all tasks.
+```
+
+## Test case 19: find tasks by description
+
+Aim: Confirm that `find` lists todo, deadline, and event tasks whose
+descriptions contain the case-sensitive search term, numbers only the matches,
+and does not match date details.
+
+Inputs: Add `read book`, `return book`, `book club`, and `buy milk`; mark the
+first two tasks; then enter `find book`, `find Book`, `find 2019`, and `bye`.
+
+Expected output for `find book`:
+
+```text
+Certainly. Here are the matching tasks in your list:
+1.[T][X] read book
+2.[D][X] return book (by: Jun 06 2019)
+3.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)
+```
+
+Both unmatched searches produce an actionable message such as:
+
+```text
+My apologies, but no task descriptions contain 'Book'. Please try another search term.
+```
+
+## Test case 20: find requires a search term
+
+Aim: Confirm that a missing search term is corrected politely and does not end
+the application.
+
+Inputs: `find`, `bye`
+
+Expected output:
+
+```text
+Please provide text to find. Usage: find <search term>, for example 'find book'.
 ```
