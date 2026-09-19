@@ -4,7 +4,6 @@ import moistbot.command.Command;
 import moistbot.command.Parser;
 import moistbot.exception.MoistBotException;
 import moistbot.storage.Storage;
-import moistbot.task.Task;
 import moistbot.task.TaskManager;
 import moistbot.ui.UserInterface;
 
@@ -81,7 +80,8 @@ public final class MoistBot {
     private boolean processCommand(String input) {
         try {
             Command command = Parser.parseInput(input);
-            return execute(command);
+            command.execute(taskManager, ui, storage);
+            return command.isExit();
         } catch (MoistBotException e) {
             ui.printMessage(e.getMessage());
             return false;
@@ -90,103 +90,6 @@ public final class MoistBot {
                     + "internal error. Please check the command format and try again. If the matter persists, "
                     + "please restart MoistBot.");
             return false;
-        }
-    }
-
-    /**
-     * Executes a parsed command and prints the corresponding user feedback.
-     * Handles all supported task and application commands.
-     * Task operations delegate to TaskManager for manipulation and to UserInterface for display.
-     *
-     * @param command The parsed command object to execute
-     * @return True if the application should exit, false otherwise
-     */
-    private boolean execute(Command command) throws MoistBotException {
-        Command.CommandType commandType = command.getCommandType();
-
-        switch (commandType) {
-            case BYE:
-            case LIST:
-            case TODO:
-            case DEADLINE:
-            case EVENT:
-                command.execute(taskManager, ui, storage);
-                return command.isExit();
-            case MARK:
-                return executeMark(command.getDescription());
-            case UNMARK:
-                return executeUnmark(command.getDescription());
-            case DELETE:
-                return executeDelete(command.getDescription());
-            default:
-                throw new MoistBotException("My apologies, but that command is not supported.");
-        }
-    }
-
-    /**
-     * Executes the mark command to mark a task as completed.
-     *
-     * @param description The 1-based index of the task to mark
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task index is invalid
-     */
-    private boolean executeMark(String description) throws MoistBotException {
-        int markIndex = Integer.parseInt(description);
-        Task task = taskManager.getExistingTask(markIndex, "mark");
-        boolean wasCompleted = task.isCompleted();
-        task.setCompleted(true);
-        saveCompletionChange(task, wasCompleted);
-        ui.printMarkTask(task);
-        return false;
-    }
-
-    /**
-     * Executes the unmark command to mark a task as incomplete.
-     *
-     * @param description The 1-based index of the task to unmark
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task index is invalid
-     */
-    private boolean executeUnmark(String description) throws MoistBotException {
-        int unmarkIndex = Integer.parseInt(description);
-        Task task = taskManager.getExistingTask(unmarkIndex, "unmark");
-        boolean wasCompleted = task.isCompleted();
-        task.setCompleted(false);
-        saveCompletionChange(task, wasCompleted);
-        ui.printUnmarkTask(task);
-        return false;
-    }
-
-    /**
-     * Executes the delete command and removes the selected task.
-     *
-     * @param description The 1-based index of the task to delete
-     * @return Always returns false to continue execution
-     * @throws MoistBotException if the task index is invalid
-     */
-    private boolean executeDelete(String description) throws MoistBotException {
-        int deleteIndex = Integer.parseInt(description);
-        Task deletedTask = taskManager.getExistingTask(deleteIndex, "delete");
-        taskManager.deleteTask(deleteIndex);
-        try {
-            storage.saveTasks(taskManager);
-        } catch (MoistBotException e) {
-            taskManager.restoreTask(deleteIndex, deletedTask);
-            throw e;
-        }
-        ui.printDeleteTask(deletedTask, taskManager.getSize());
-        return false;
-    }
-
-    /**
-     * Saves a completion-state change and restores the previous state if persistence fails.
-     */
-    private void saveCompletionChange(Task task, boolean wasCompleted) throws MoistBotException {
-        try {
-            storage.saveTasks(taskManager);
-        } catch (MoistBotException e) {
-            task.setCompleted(wasCompleted);
-            throw e;
         }
     }
 

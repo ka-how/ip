@@ -7,6 +7,9 @@ import moistbot.task.TaskManager;
  * Adds an event task with a start and end time to the task list.
  */
 public final class EventCommand extends AddCommand {
+    private final String from;
+    private final String to;
+
     /**
      * Creates an event command for the supplied description and times.
      *
@@ -15,7 +18,9 @@ public final class EventCommand extends AddCommand {
      * @param to The event end time
      */
     public EventCommand(String description, String from, String to) {
-        super(CommandType.EVENT, description, from, to);
+        super(description);
+        this.from = from;
+        this.to = to;
     }
 
     /**
@@ -26,6 +31,6 @@ public final class EventCommand extends AddCommand {
      */
     @Override
     protected Task createTask(TaskManager tasks) {
-        return tasks.addEvent(getDescription(), getFrom(), getTo());
+        return tasks.addEvent(getDescription(), from, to);
     }
 }

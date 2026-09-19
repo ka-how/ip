@@ -12,7 +12,6 @@ public final class ListCommand extends Command {
      * Creates a list command without additional arguments.
      */
     public ListCommand() {
-        super(CommandType.LIST, null);
     }
 
     /**

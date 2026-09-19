@@ -7,6 +7,8 @@ import moistbot.task.TaskManager;
  * Adds a task with a deadline to the task list.
  */
 public final class DeadlineCommand extends AddCommand {
+    private final String by;
+
     /**
      * Creates a deadline command for the supplied description and deadline.
      *
@@ -14,7 +16,8 @@ public final class DeadlineCommand extends AddCommand {
      * @param by The deadline in its user-entered form
      */
     public DeadlineCommand(String description, String by) {
-        super(CommandType.DEADLINE, description, null, by);
+        super(description);
+        this.by = by;
     }
 
     /**
@@ -25,6 +28,6 @@ public final class DeadlineCommand extends AddCommand {
      */
     @Override
     protected Task createTask(TaskManager tasks) {
-        return tasks.addDeadline(getDescription(), getTo());
+        return tasks.addDeadline(getDescription(), by);
     }
 }

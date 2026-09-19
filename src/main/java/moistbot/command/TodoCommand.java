@@ -13,7 +13,7 @@ public final class TodoCommand extends AddCommand {
      * @param description The todo task description
      */
     public TodoCommand(String description) {
-        super(CommandType.TODO, description);
+        super(description);
     }
 
     /**

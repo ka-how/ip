@@ -12,7 +12,6 @@ public final class ExitCommand extends Command {
      * Creates an exit command without additional arguments.
      */
     public ExitCommand() {
-        super(CommandType.BYE, null);
     }
 
     /**

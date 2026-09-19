@@ -72,15 +72,15 @@ public final class Parser {
     private static Command parseCommand(String commandText, String[] inputArray) throws MoistBotException {
         switch (commandText) {
             case "bye":
-                return parseCommandWithoutArguments(Command.CommandType.BYE, inputArray);
+                return parseCommandWithoutArguments("bye", inputArray);
             case "list":
-                return parseCommandWithoutArguments(Command.CommandType.LIST, inputArray);
+                return parseCommandWithoutArguments("list", inputArray);
             case "mark":
-                return parseTaskNumber(Command.CommandType.MARK, inputArray);
+                return parseTaskNumber("mark", inputArray);
             case "unmark":
-                return parseTaskNumber(Command.CommandType.UNMARK, inputArray);
+                return parseTaskNumber("unmark", inputArray);
             case "delete":
-                return parseTaskNumber(Command.CommandType.DELETE, inputArray);
+                return parseTaskNumber("delete", inputArray);
             case "todo":
                 return parseTodo(inputArray);
             case "deadline":
@@ -95,48 +95,64 @@ public final class Parser {
     /**
      * Parses a command that must not have arguments.
      *
-     * @param commandType The command type to create
+     * @param commandName The command name to create
      * @param inputArray The array containing the command and any supplied text
      * @return A parsed command without arguments
      * @throws MoistBotException if unexpected text follows the command
      */
-    private static Command parseCommandWithoutArguments(Command.CommandType commandType, String[] inputArray)
+    private static Command parseCommandWithoutArguments(String commandName, String[] inputArray)
             throws MoistBotException {
         if (inputArray.length > 1) {
-            String commandName = commandType.name().toLowerCase();
             throw new MoistBotException("The '" + commandName + "' command does not accept arguments. Please "
                     + "enter only '" + commandName + "'.");
         }
-        if (commandType == Command.CommandType.BYE) {
+        if (commandName.equals("bye")) {
             return new ExitCommand();
         }
-        if (commandType == Command.CommandType.LIST) {
-            return new ListCommand();
-        }
-        return new Command(commandType, null);
+        return new ListCommand();
     }
 
     /**
      * Parses task commands that require an integer task number.
      *
-     * @param commandType The command type (MARK, UNMARK, or DELETE)
+     * @param commandName The command name (mark, unmark, or delete)
      * @param inputArray The array containing the command and its arguments
      * @return A parsed command containing a task number
      * @throws MoistBotException if the argument is missing or not an integer
      */
-    private static Command parseTaskNumber(Command.CommandType commandType, String[] inputArray)
+    private static Command parseTaskNumber(String commandName, String[] inputArray)
             throws MoistBotException {
-        String commandName = commandType.name().toLowerCase();
         if (inputArray.length < 2) {
             throw new MoistBotException("Please provide a task number. Usage: " + commandName + " <task number>, "
                     + "for example '" + commandName + " 1'.");
         }
         try {
-            Integer.parseInt(inputArray[1]);
-            return new Command(commandType, inputArray[1]);
+            int taskNumber = Integer.parseInt(inputArray[1]);
+            return createTaskNumberCommand(commandName, taskNumber);
         } catch (NumberFormatException e) {
             throw new MoistBotException("My apologies, but '" + inputArray[1] + "' is not a valid task number. "
                     + "Please enter one whole number, for example '" + commandName + " 1'.");
+        }
+    }
+
+    /**
+     * Creates a task-number command after its shared numeric validation.
+     *
+     * @param commandName The command name
+     * @param taskNumber The parsed 1-based task number
+     * @return The concrete command for the supplied name
+     * @throws MoistBotException if the command name is unsupported
+     */
+    private static Command createTaskNumberCommand(String commandName, int taskNumber) throws MoistBotException {
+        switch (commandName) {
+            case "mark":
+                return new MarkCommand(taskNumber);
+            case "unmark":
+                return new UnmarkCommand(taskNumber);
+            case "delete":
+                return new DeleteCommand(taskNumber);
+            default:
+                throw new MoistBotException("My apologies, but that command is not supported.");
         }
     }
 

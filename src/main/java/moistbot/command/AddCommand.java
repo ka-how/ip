@@ -10,26 +10,15 @@ import moistbot.ui.UserInterface;
  * Provides the shared persistence and feedback workflow for commands that add tasks.
  */
 public abstract class AddCommand extends Command {
+    private final String description;
+
     /**
      * Creates an add command containing a description only.
      *
-     * @param commandType The specific type of task addition
      * @param description The task description
      */
-    protected AddCommand(CommandType commandType, String description) {
-        super(commandType, description);
-    }
-
-    /**
-     * Creates an add command containing a description and optional time details.
-     *
-     * @param commandType The specific type of task addition
-     * @param description The task description
-     * @param from The event start time, or null when not applicable
-     * @param to The deadline or event end time, or null when not applicable
-     */
-    protected AddCommand(CommandType commandType, String description, String from, String to) {
-        super(commandType, description, from, to);
+    protected AddCommand(String description) {
+        this.description = description;
     }
 
     /**
@@ -59,4 +48,13 @@ public abstract class AddCommand extends Command {
      * @return The task that was added
      */
     protected abstract Task createTask(TaskManager tasks);
+
+    /**
+     * Returns the description of the task to add.
+     *
+     * @return The task description
+     */
+    protected String getDescription() {
+        return description;
+    }
 }
