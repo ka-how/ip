@@ -23,17 +23,27 @@ sessions.
 
 ### Requirements
 
-- Java Development Kit (JDK) 25
-- IntelliJ IDEA
+- Java 25 or later
 
 ### Starting MoistBot
 
-1. Clone or download the project and open its root folder in IntelliJ IDEA.
-2. Set the project SDK to JDK 25 and leave the project language level as
-   **SDK default**.
-3. Open `src/main/java/moistbot/MoistBot.java`.
-4. Run `MoistBot.main()`.
-5. Enter one command per line in the Run console.
+1. Download the JAR file from the
+   [MoistBot v0.2 release](https://github.com/ka-how/ip/releases/tag/v0.2).
+2. Move the JAR file into the folder where you want MoistBot to store its
+   data.
+3. Open a terminal in that folder and run:
+
+   ```text
+   java -jar MoistBot.jar
+   ```
+
+   If the downloaded JAR has a different name, replace `MoistBot.jar` with
+   its actual file name.
+4. Enter one command per line in the terminal.
+
+To run MoistBot from source instead, clone the repository, open its root
+folder in IntelliJ IDEA, and set the project SDK and language level to JDK 25.
+Then run `moistbot.MoistBot.main()`.
 
 When MoistBot is ready, it displays its name and greeting:
 
