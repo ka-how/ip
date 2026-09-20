@@ -326,19 +326,19 @@ There are no deadlines or events on or before Nov 30 2019. Please enter another 
 ## Test case 19: find tasks by description
 
 Aim: Confirm that `find` lists todo, deadline, and event tasks whose
-descriptions contain the case-sensitive search term, numbers only the matches,
-and does not match date details.
+descriptions contain the case-sensitive search term, preserves their status
+and original list numbers, and does not match date details.
 
-Inputs: Add `read book`, `return book`, `book club`, and `buy milk`; mark the
-first two tasks; then enter `find book`, `find Book`, `find 2019`, and `bye`.
+Inputs: Add `read book`, `buy milk`, `return book`, and `book club`; mark tasks
+1 and 3; then enter `find book`, `find Book`, `find 2019`, and `bye`.
 
 Expected output for `find book`:
 
 ```text
 Certainly. Here are the matching tasks in your list:
 1.[T][X] read book
-2.[D][X] return book (by: Jun 06 2019)
-3.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)
+3.[D][X] return book (by: Jun 06 2019)
+4.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)
 ```
 
 Both unmatched searches produce an actionable message such as:

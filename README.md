@@ -220,9 +220,8 @@ find report
 Searches are case-sensitive: `report` and `Report` are different terms. Only
 the task description is searched; deadline and event dates are not searched.
 
-Search results are numbered from 1 in match order. These are result numbers,
-not necessarily the tasks' original numbers. Enter `list` before using
-`mark`, `unmark`, or `delete` on a search result.
+Search results retain their original task numbers from `list`. You can use a
+number shown by `find` directly with `mark`, `unmark`, or `delete`.
 
 ## Updating tasks
 

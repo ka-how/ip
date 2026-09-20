@@ -161,7 +161,7 @@ public final class UserInterface implements AutoCloseable {
 
     /**
      * Displays tasks whose descriptions contain the supplied search term.
-     * Matching tasks are numbered by their order in the search results.
+     * Matching tasks retain their original list numbers so that follow-up task commands target the same tasks.
      *
      * @param taskManager The task list to search
      * @param searchTerm The text that matching descriptions must contain
@@ -170,15 +170,15 @@ public final class UserInterface implements AutoCloseable {
         System.out.println(DIVIDER);
         System.out.println("Certainly. Here are the matching tasks in your list:");
 
-        int matchNumber = 0;
+        boolean hasMatchingTask = false;
         for (int taskNumber = 1; taskNumber <= taskManager.getSize(); taskNumber++) {
             Task task = taskManager.getTask(taskNumber);
             if (task.getDescription().contains(searchTerm)) {
-                matchNumber++;
-                System.out.println(matchNumber + "." + formatTaskDetails(task));
+                hasMatchingTask = true;
+                System.out.println(taskNumber + "." + formatTaskDetails(task));
             }
         }
-        if (matchNumber == 0) {
+        if (!hasMatchingTask) {
             System.out.println("My apologies, but no task descriptions contain '" + searchTerm
                     + "'. Please try another search term.");
         }

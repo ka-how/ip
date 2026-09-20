@@ -262,23 +262,23 @@ $cases += @{
     Name = 'find filters tasks by description'
     Commands = @(
         'todo read book',
+        'todo buy milk',
         'deadline return book /by 2019-06-06',
         'event book club /from 2019-06-07 /to 2019-06-08',
-        'todo buy milk',
         'mark 1',
-        'mark 2',
+        'mark 3',
         'find book',
         'find Book',
         'find 2019',
         'bye')
     Messages = @(
         "Certainly. I have added this task:`n[T][ ] read book`nYour list now contains 1 task.",
-        "Certainly. I have added this task:`n[D][ ] return book (by: Jun 06 2019)`nYour list now contains 2 tasks.",
-        "Certainly. I have added this task:`n[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)`nYour list now contains 3 tasks.",
-        "Certainly. I have added this task:`n[T][ ] buy milk`nYour list now contains 4 tasks.",
+        "Certainly. I have added this task:`n[T][ ] buy milk`nYour list now contains 2 tasks.",
+        "Certainly. I have added this task:`n[D][ ] return book (by: Jun 06 2019)`nYour list now contains 3 tasks.",
+        "Certainly. I have added this task:`n[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)`nYour list now contains 4 tasks.",
         "Certainly. I have marked this task as complete:`n[T][X] read book",
         "Certainly. I have marked this task as complete:`n[D][X] return book (by: Jun 06 2019)",
-        "Certainly. Here are the matching tasks in your list:`n1.[T][X] read book`n2.[D][X] return book (by: Jun 06 2019)`n3.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)",
+        "Certainly. Here are the matching tasks in your list:`n1.[T][X] read book`n3.[D][X] return book (by: Jun 06 2019)`n4.[E][ ] book club (from: Jun 07 2019 to: Jun 08 2019)",
         "Certainly. Here are the matching tasks in your list:`nMy apologies, but no task descriptions contain 'Book'. Please try another search term.",
         "Certainly. Here are the matching tasks in your list:`nMy apologies, but no task descriptions contain '2019'. Please try another search term.",
         $exitMessage)
